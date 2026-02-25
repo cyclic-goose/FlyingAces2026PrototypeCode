@@ -7,6 +7,7 @@
 
 package frc.robot;
 
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -26,6 +27,9 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
+// importing own code
+import frc.robot.subsystems.shooter;
+
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -35,6 +39,9 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
+
+  // with the talon library this is how we would instantiate a new Talon motor - Brenden
+  private final shooter shooterMotor = new shooter(15); // CAN ID 15
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -74,6 +81,10 @@ public class RobotContainer {
         // new ModuleIOTalonFXS(TunerConstants.FrontRight),
         // new ModuleIOTalonFXS(TunerConstants.BackLeft),
         // new ModuleIOTalonFXS(TunerConstants.BackRight));
+
+        
+
+        System.out.println("TalonFX initialized on CAN ID 15");
         break;
 
       case SIM:
@@ -137,6 +148,7 @@ public class RobotContainer {
             () -> -controller.getLeftX(),
             () -> -controller.getRightX()));
 
+
     // Lock to 0° when A button is held
     controller
         .a()
@@ -160,6 +172,17 @@ public class RobotContainer {
                             new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
                     drive)
                 .ignoringDisable(true));
+
+
+    // left bumper to stop the motor
+    controller.leftBumper().onTrue(
+            Commands.runOnce(shooterMotor::stop, shooterMotor)
+        );
+    // Press right bumper to run the shooter motor
+    controller.rightBumper().onTrue(
+        Commands.runOnce(() -> shooterMotor.run(0.1), shooterMotor)
+    );
+    
   }
 
   /**
