@@ -4,8 +4,8 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class shooter extends SubsystemBase {
@@ -22,16 +22,15 @@ public class shooter extends SubsystemBase {
   }
 
   /** Stop the motor */
-    public void stop() {
-        testMotor.set(0);
-        System.out.println("Shooter motor stopped");
-    }
+  public void stop() {
+    testMotor.set(0);
+    System.out.println("Shooter motor stopped");
+  }
 
-
-    /** Run motor at a given percent output */
-    public void run(double speed) {
-        testMotor.set(speed); // speed between -1.0 and 1.0
-    }
+  /** Run motor at a given percent output */
+  public void run(double speed) {
+    testMotor.set(speed); // speed between -1.0 and 1.0
+  }
 
   @Override
   public void periodic() {

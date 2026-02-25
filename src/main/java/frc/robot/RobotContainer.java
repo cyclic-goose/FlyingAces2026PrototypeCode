@@ -7,7 +7,6 @@
 
 package frc.robot;
 
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -25,10 +24,9 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
-
 // importing own code
 import frc.robot.subsystems.shooter;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -81,8 +79,6 @@ public class RobotContainer {
         // new ModuleIOTalonFXS(TunerConstants.FrontRight),
         // new ModuleIOTalonFXS(TunerConstants.BackLeft),
         // new ModuleIOTalonFXS(TunerConstants.BackRight));
-
-        
 
         System.out.println("TalonFX initialized on CAN ID 15");
         break;
@@ -148,7 +144,6 @@ public class RobotContainer {
             () -> -controller.getLeftX(),
             () -> -controller.getRightX()));
 
-
     // Lock to 0° when A button is held
     controller
         .a()
@@ -173,16 +168,10 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-
     // left bumper to stop the motor
-    controller.leftBumper().onTrue(
-            Commands.runOnce(shooterMotor::stop, shooterMotor)
-        );
+    controller.leftBumper().onTrue(Commands.runOnce(shooterMotor::stop, shooterMotor));
     // Press right bumper to run the shooter motor
-    controller.rightBumper().onTrue(
-        Commands.runOnce(() -> shooterMotor.run(0.1), shooterMotor)
-    );
-    
+    controller.rightBumper().onTrue(Commands.runOnce(() -> shooterMotor.run(0.1), shooterMotor));
   }
 
   /**
