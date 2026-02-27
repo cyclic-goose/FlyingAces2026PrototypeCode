@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -25,7 +26,6 @@ import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 // importing own code
-import frc.robot.subsystems.shooter;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -39,7 +39,7 @@ public class RobotContainer {
   private final Drive drive;
 
   // with the talon library this is how we would instantiate a new Talon motor - Brenden
-  private final shooter shooterMotor = new shooter(15); // CAN ID 15
+  private final Shooter shooterMotor = new Shooter(15); // CAN ID 1
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -168,10 +168,11 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    // left bumper to stop the motor
-    controller.leftBumper().onTrue(Commands.runOnce(shooterMotor::stop, shooterMotor));
-    // Press right bumper to run the shooter motor
-    controller.rightBumper().onTrue(Commands.runOnce(() -> shooterMotor.run(0.1), shooterMotor));
+    // SHOOTER MOTOR TEMP
+    controller
+        .rightBumper()
+        .onTrue(Commands.runOnce(() -> shooterMotor.run(0.7), shooterMotor))
+        .onFalse(Commands.runOnce(shooterMotor::stop, shooterMotor));
   }
 
   /**
