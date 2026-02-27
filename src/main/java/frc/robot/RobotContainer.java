@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
@@ -37,6 +38,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
+
+  private final Limelight limelight = new Limelight();
 
   // with the talon library this is how we would instantiate a new Talon motor - Brenden
   private final Shooter shooterMotor = new Shooter(15); // CAN ID 1
@@ -168,7 +171,13 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    // SHOOTER MOTOR TEMP
+    // Hold Y to align to April tag target
+    controller
+        .y()
+        .whileTrue(
+            DriveCommands.alignToTarget(
+                drive, limelight, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
+
     controller
         .rightBumper()
         .onTrue(Commands.runOnce(() -> shooterMotor.run(0.7), shooterMotor))
