@@ -39,6 +39,7 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
 
+  // limelight commands are in DriveCommands, will be called from controller button press
   private final Limelight limelight = new Limelight();
 
   // with the talon library this is how we would instantiate a new Talon motor - Brenden
