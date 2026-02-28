@@ -42,7 +42,7 @@ public class RobotContainer {
   private final Limelight limelight = new Limelight();
 
   // with the talon library this is how we would instantiate a new Talon motor - Brenden
-  private final Shooter shooterMotor = new Shooter(15); // CAN ID 1
+  private final Shooter shooterMotor = new Shooter(15, 16, 17); // CAN ID 1
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
