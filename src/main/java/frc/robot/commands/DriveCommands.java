@@ -45,6 +45,8 @@ public class DriveCommands {
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
 
+  private static final PIDController alignController = new PIDController(ALIGN_KP, 0.0, ALIGN_KD);
+
   private DriveCommands() {}
 
   private static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
@@ -162,7 +164,7 @@ public class DriveCommands {
   public static Command alignToTarget(
       Drive drive, Limelight limelight, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
 
-    PIDController alignController = new PIDController(ALIGN_KP, 0.0, ALIGN_KD);
+    // 2. Configure the static instance here instead of creating a new one
     alignController.setSetpoint(0.0);
     alignController.setTolerance(1.0);
 
@@ -195,7 +197,7 @@ public class DriveCommands {
                           : drive.getRotation()));
             },
             drive)
-        .beforeStarting(() -> alignController.reset());
+        .beforeStarting(() -> alignController.reset()); // Resetting static controller is safe here
   }
 
   /**
