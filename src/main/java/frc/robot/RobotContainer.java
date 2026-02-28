@@ -42,7 +42,7 @@ public class RobotContainer {
   private final Limelight limelight = new Limelight();
 
   // with the talon library this is how we would instantiate a new Talon motor - Brenden
-  private final Shooter shooterMotor = new Shooter(15, 16, 17); // CAN ID 1
+  private final Shooter shooter = new Shooter(15, 16, 17, 18);
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -160,6 +160,32 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
+    // --- SHOOTER BINDINGS ---
+
+    // Left Bumper: FeedMove Forward (Intaking direction?)
+    controller
+        .leftBumper()
+        .whileTrue(
+            Commands.runEnd(() -> shooter.runFeedMove(0.2), () -> shooter.runFeedMove(0), shooter));
+
+    // Right Bumper: FeedMove Backward (Ejecting direction?)
+    controller
+        .rightBumper()
+        .whileTrue(
+            Commands.runEnd(
+                () -> shooter.runFeedMove(-0.2), () -> shooter.runFeedMove(0), shooter));
+
+    // Left Trigger: Run Feed Motor
+    controller
+        .leftTrigger()
+        .whileTrue(Commands.runEnd(() -> shooter.runFeed(0.5), () -> shooter.runFeed(0), shooter));
+
+    // Right Trigger: Run Shooter (Launch + Transfer)
+    // Launch at 80%, Transfer at 60% (Adjust these values as needed)
+    controller
+        .rightTrigger()
+        .whileTrue(Commands.runEnd(() -> shooter.runShooter(0.8, 0.6), shooter::stop, shooter));
+
     // Reset gyro to 0° when B button is pressed
     controller
         .b()
@@ -177,11 +203,6 @@ public class RobotContainer {
         .whileTrue(
             DriveCommands.alignToTarget(
                 drive, limelight, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
-
-    controller
-        .rightBumper()
-        .onTrue(Commands.runOnce(() -> shooterMotor.run(0.7), shooterMotor))
-        .onFalse(Commands.runOnce(shooterMotor::stop, shooterMotor));
   }
 
   /**

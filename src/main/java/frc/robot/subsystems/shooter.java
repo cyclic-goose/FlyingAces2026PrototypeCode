@@ -1,50 +1,69 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX; // for talonSRX encoder (phoenix 5)
-import com.ctre.phoenix6.configs.TalonFXConfiguration; // for initializing TalonFX motors
-import com.ctre.phoenix6.hardware.TalonFX; // for the launch and transfer motors
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shooter extends SubsystemBase {
   private final WPI_TalonSRX feedMotor;
+  private final WPI_TalonSRX feedMoveMotor;
   private final TalonFX transferMotor;
   private final TalonFX launchMotor;
-  //
 
-  public Shooter(int feedMotorID, int transferMotorID, int launchMotorID) {
-    // initialize feed motor (talonSRX in phoenix 5 library)
+  public Shooter(int feedMotorID, int feedMoveMotorID, int transferMotorID, int launchMotorID) {
+    // 1. Initialize Feed Motor (Phoenix 5)
     feedMotor = new WPI_TalonSRX(feedMotorID);
     feedMotor.configFactoryDefault();
     feedMotor.setInverted(false);
     feedMotor.configVoltageCompSaturation(12.0);
     feedMotor.enableVoltageCompensation(true);
-    // finish initialize feed motor
 
-    // init transfer and launch motors (TalonFX encoders from Phoenix6 library)
-    // will use the same configuration for both... for now
+    // 2. Initialize Feed Move Motor (Phoenix 5)
+    // This was missing in your original code
+    feedMoveMotor = new WPI_TalonSRX(feedMoveMotorID);
+    feedMoveMotor.configFactoryDefault();
+    feedMoveMotor.setInverted(false); // Adjust if it goes the wrong way
+    feedMoveMotor.configVoltageCompSaturation(12.0);
+    feedMoveMotor.enableVoltageCompensation(true);
+
+    // 3. Initialize Transfer and Launch Motors (Phoenix 6)
     TalonFXConfiguration config = new TalonFXConfiguration();
     config.Slot0.kP = 0.1;
     config.Slot0.kI = 0.0;
     config.Slot0.kD = 0.0;
+
     transferMotor = new TalonFX(transferMotorID);
     transferMotor.getConfigurator().apply(config);
 
-    // same config for launch motor for now
     launchMotor = new TalonFX(launchMotorID);
     launchMotor.getConfigurator().apply(config);
   }
 
-  /** Run shooter at given speed (-1.0 to 1.0) */
-  public void run(double speed) {
-    feedMotor.set(ControlMode.PercentOutput, speed);
-    transferMotor.set(speed);
-    launchMotor.set(speed);
+  /** Run the Feed Move motor (Bumpers) */
+  public void runFeedMove(double speed) {
+    feedMoveMotor.set(ControlMode.PercentOutput, speed);
   }
 
-  /** Stop shooter */
+  /** Run the Feed/Intake motor (Left Trigger) */
+  public void runFeed(double speed) {
+    feedMotor.set(ControlMode.PercentOutput, speed);
+  }
+
+  /**
+   * * Run the Shooter mechanism (Right Trigger). Usually Launch is faster than Transfer to ensure
+   * clean exit.
+   */
+  public void runShooter(double launchSpeed, double transferSpeed) {
+    launchMotor.set(launchSpeed);
+    transferMotor.set(transferSpeed);
+  }
+
+  /** Stop all motors */
   public void stop() {
     feedMotor.set(ControlMode.PercentOutput, 0);
+    feedMoveMotor.set(ControlMode.PercentOutput, 0);
     transferMotor.stopMotor();
     launchMotor.stopMotor();
   }
