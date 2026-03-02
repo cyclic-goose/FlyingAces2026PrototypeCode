@@ -161,8 +161,6 @@ public class RobotContainer {
     // Switch to X pattern when X button is pressed
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-
-    
     // --- SHOOTER BINDINGS ---
 
     // Left Bumper: FeedMove Forward (Intaking direction?)
@@ -190,7 +188,6 @@ public class RobotContainer {
         .whileTrue(Commands.runEnd(() -> shooter.runShooter(0.8, 0.6), shooter::stop, shooter));
 
     // --- SHOOTER BINDINGS ---
-
 
     // Reset gyro to 0° when B button is pressed
     controller
