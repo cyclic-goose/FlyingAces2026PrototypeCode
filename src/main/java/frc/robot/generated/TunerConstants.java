@@ -74,6 +74,8 @@ public class TunerConstants {
 
   // CAN bus that the devices are located on;
   // All swerve devices must share the same CAN bus
+  // "" = RoboRIO CAN bus (CAN 2.0, 100 Hz odometry)
+  // If using a CANivore, set to its name (e.g., "canivore") for CAN FD (250 Hz odometry)
   public static final CANBus kCANBus = new CANBus("", "./logs/example.hoot");
 
   // Theoretical free speed (m/s) at 12 V applied output;

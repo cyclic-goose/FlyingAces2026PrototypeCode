@@ -1,0 +1,58 @@
+Suggestions for dragging wheel:
+
+
+Looking at your TunerConstants, the swerve configuration looks reasonable and standard for a CTRE swerve setup. Here's my assessment:
+
+Configuration looks correct:
+
+Steer gains (kP=35, kD=0.5, kS=0.1, kV=1.16) are in a typical range
+Drive gains (kP=0.1, kV=0.124) look fine
+Module positions are symmetric (±10.5 inches) — good
+Gear ratios (drive: 6.82, steer: 12.1) and wheel radius (2 in) are standard L2 MK4i values
+Steer motors all inverted consistently (true)
+Left/right drive inversion is correct (left=false, right=true)
+Slip current at 120A is reasonable
+Steer stator current limit at 60A is sensible
+Nothing in software jumps out as a dragging cause. A dragging wheel is most likely hardware:
+
+Encoder offset slightly off — if one module's CANcoder offset is wrong, the wheel could sit at a slight angle and drag. You could re-zero the offsets in Tuner X to verify.
+Mechanical friction — a tight bearing, misaligned azimuth, or over-tightened bolt
+Coupling ratio — your kCoupleRatio of 5.4 compensates for drive/steer coupling. If this doesn't match your actual module, it could cause slight drift, but usually not dragging.
+To diagnose, I'd suggest:
+
+Put the robot on blocks and check if all 4 modules spin freely by hand
+In Tuner X, verify each module's CANcoder reads ~0 when wheels face forward
+Check if the dragging wheel's steer motor draws noticeably more current than the others (visible in Phoenix Tuner self-test or signal logging)
+The software side looks clean — I'd lean toward hardware (mechanical binding or an encoder offset that needs re-zeroing).
+
+
+
+Limelight-to-RoboRIO Connection
+Physical Setup
+Ethernet cable from the Limelight to your robot's network switch (or directly to the radio's extra port)
+Power the Limelight via the VRM (12V/500mA regulated output) or a dedicated power source
+Configure the Limelight's IP
+Connect to the robot's network (via WiFi or tethered)
+Open a browser and go to http://limelight.local:5801 (the Limelight web UI)
+Go to Settings > Networking and set:
+IP: 10.TE.AM.11 (e.g., if your team number is 1234, use 10.12.34.11)
+Subnet: 255.255.255.0
+Gateway: 10.TE.AM.1
+Team number must match your RoboRIO's team number
+Verify Communication
+The fastest way to confirm data is flowing:
+
+NetworkTables check — Deploy your code, then open Shuffleboard or AdvantageScope. Look for the limelight table. You should see tv, tx, ty, and botpose_wpiblue entries updating.
+
+Your code's logging — Since your Limelight.java logs to AdvantageKit every cycle, check AdvantageScope for:
+
+Limelight/hasTarget — should flip to true when you point at an AprilTag
+Limelight/tx / Limelight/ty — should change as you move the camera
+Limelight/BotPose — should show a valid field position when tags are visible
+Quick smoke test in the Limelight UI — http://limelight.local:5801 shows a live camera feed. If you see AprilTag detections drawn on the feed, the camera side is working. If NetworkTables data also appears in Shuffleboard, the connection to the RoboRIO is confirmed.
+
+Common Gotchas
+Wrong IP subnet — The Limelight, RoboRIO, and radio must all be on 10.TE.AM.x. If the Limelight is still on its factory default (10.0.0.x), it won't talk to the RoboRIO on the field network.
+Team number mismatch — Set the team number in both the Limelight web UI and the RoboRIO imaging tool.
+Firewall on your laptop — If you can't reach limelight.local:5801, try the static IP directly (e.g., http://10.12.34.11:5801).
+Pipeline not set to AprilTags — In the Limelight UI, make sure the active pipeline is configured for AprilTag detection, not retroreflective or color.

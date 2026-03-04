@@ -8,7 +8,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
+// import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -23,7 +23,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.drive.Drive;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -38,14 +37,18 @@ public class DriveCommands {
   private static final double ANGLE_KD = 0.4;
   private static final double ANGLE_MAX_VELOCITY = 8.0;
   private static final double ANGLE_MAX_ACCELERATION = 20.0;
-  private static final double ALIGN_KP = 0.05;
-  private static final double ALIGN_KD = 0.002;
+
+  // FF Characterization constants
   private static final double FF_START_DELAY = 2.0; // Secs
   private static final double FF_RAMP_RATE = 0.1; // Volts/Sec
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
 
-  private static final PIDController alignController = new PIDController(ALIGN_KP, 0.0, ALIGN_KD);
+  // Goal Constants (Defaulted to 2024 Speaker Centers)
+  // Blue Goal: x ~ 0.0m, y ~ 5.55m
+  // Red Goal: x ~ 16.54m, y ~ 5.55m
+  private static final Translation2d BLUE_GOAL = new Translation2d(0.0, 5.55);
+  private static final Translation2d RED_GOAL = new Translation2d(16.54, 5.55);
 
   private DriveCommands() {}
 
@@ -102,11 +105,7 @@ public class DriveCommands {
         drive);
   }
 
-  /**
-   * Field relative drive command using joystick for linear control and PID for angular control.
-   * Possible use cases include snapping to an angle, aiming at a vision target, or controlling
-   * absolute rotation with a joystick.
-   */
+  /** Field relative drive command using joystick for linear control and PID for angular control. */
   public static Command joystickDriveAtAngle(
       Drive drive,
       DoubleSupplier xSupplier,
@@ -157,47 +156,64 @@ public class DriveCommands {
   }
 
   /**
-   * Field relative drive command using joystick for linear control and Limelight for rotational
-   * alignment. The robot rotates to center on the April tag target while the driver retains linear
-   * control.
+   * Field relative drive command that aligns the robot's heading to face the alliance goal. Uses
+   * the fused pose estimator (odometry + vision) for a smooth, stable heading calculation.
    */
   public static Command alignToTarget(
-      Drive drive, Limelight limelight, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
+      Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
 
-    // 2. Configure the static instance here instead of creating a new one
-    alignController.setSetpoint(0.0);
-    alignController.setTolerance(1.0);
+    ProfiledPIDController angleController =
+        new ProfiledPIDController(
+            ANGLE_KP,
+            0.0,
+            ANGLE_KD,
+            new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+    angleController.enableContinuousInput(-Math.PI, Math.PI);
+    angleController.setTolerance(Math.toRadians(1.0));
 
     return Commands.run(
             () -> {
-              // Get linear velocity from joysticks
+              // 1. Get linear velocity from joysticks
               Translation2d linearVelocity =
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-              // Calculate rotational correction from Limelight tx
-              double omega = 0.0;
-              if (limelight.hasTarget()) {
-                omega = -alignController.calculate(limelight.getTx());
-              }
+              // 2. Use the fused pose (odometry + vision corrections) for stable heading
+              Pose2d robotPose = drive.getPose();
 
-              // Convert to field relative speeds & send command
+              // 3. Determine Goal Position based on Alliance
+              boolean isRed =
+                  DriverStation.getAlliance().isPresent()
+                      && DriverStation.getAlliance().get() == Alliance.Red;
+              Translation2d goalLocation = isRed ? RED_GOAL : BLUE_GOAL;
+
+              // 4. Calculate Desired Angle to Goal
+              // Rotation2d(x, y) computes atan2(y, x), so pass (dx, dy) to get atan2(dy, dx)
+              Rotation2d targetRotation =
+                  new Rotation2d(
+                      goalLocation.getX() - robotPose.getX(),
+                      goalLocation.getY() - robotPose.getY());
+
+              // 5. Calculate PID Output
+              double omega =
+                  angleController.calculate(
+                      drive.getRotation().getRadians(), targetRotation.getRadians());
+
+              // 6. Drive
               ChassisSpeeds speeds =
                   new ChassisSpeeds(
                       linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                       linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                       omega);
-              boolean isFlipped =
-                  DriverStation.getAlliance().isPresent()
-                      && DriverStation.getAlliance().get() == Alliance.Red;
+
               drive.runVelocity(
                   ChassisSpeeds.fromFieldRelativeSpeeds(
                       speeds,
-                      isFlipped
+                      isRed
                           ? drive.getRotation().plus(new Rotation2d(Math.PI))
                           : drive.getRotation()));
             },
             drive)
-        .beforeStarting(() -> alignController.reset()); // Resetting static controller is safe here
+        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
   }
 
   /**

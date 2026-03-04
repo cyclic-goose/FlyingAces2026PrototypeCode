@@ -10,6 +10,7 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -39,8 +40,9 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
 
-  // limelight commands are in DriveCommands, will be called from controller button press
-  private final Limelight limelight = new Limelight();
+  // Limelight feeds vision measurements into the drive pose estimator each periodic cycle
+  @SuppressWarnings("unused")
+  private final Limelight limelight;
 
   // with the talon library this is how we would instantiate a new Talon motor - Brenden
   private final Shooter shooter = new Shooter(15, 16, 17, 18);
@@ -84,7 +86,7 @@ public class RobotContainer {
         // new ModuleIOTalonFXS(TunerConstants.BackLeft),
         // new ModuleIOTalonFXS(TunerConstants.BackRight));
 
-        System.out.println("TalonFX initialized on CAN ID 15");
+        // System.out.println("TalonFX initialized on CAN ID 15");
         break;
 
       case SIM:
@@ -110,8 +112,28 @@ public class RobotContainer {
         break;
     }
 
-    // Set up auto routines
+    // Initialize limelight with drive so it can feed vision into the pose estimator
+    limelight = new Limelight(drive);
+
+    // init autochooser
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+    // simple auto: Shoot for 1 second, then drive backward for 2 seconds
+    Command simpleAuto =
+        Commands.sequence(
+            // 1. Spin up shooter and feed
+            Commands.runEnd(() -> shooter.runShooter(0.8, 0.6), shooter::stop, shooter)
+                .withTimeout(1.0), // Run for 1 second
+
+            // 2. Drive backward at 1 m/s
+            Commands.runEnd(
+                    () -> drive.runVelocity(new ChassisSpeeds(-1.0, 0.0, 0.0)), // -X is backward
+                    () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)), // Stop at end
+                    drive)
+                .withTimeout(2.0) // Run for 2 seconds
+            );
+
+    // Add to the chooser
+    autoChooser.addDefaultOption("Simple Shoot & Move", simpleAuto);
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -205,7 +227,7 @@ public class RobotContainer {
         .y()
         .whileTrue(
             DriveCommands.alignToTarget(
-                drive, limelight, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
+                drive, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
   }
 
   /**
