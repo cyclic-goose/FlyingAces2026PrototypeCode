@@ -27,6 +27,10 @@ public class Limelight extends SubsystemBase {
     return table.getEntry("tv").getDouble(0.0) == 1.0;
   }
 
+  public double getTagID() {
+    return table.getEntry("tid").getDouble(-1);
+  }
+
   @Override
   public void periodic() {
     Logger.recordOutput("Limelight/tx", getTx());
