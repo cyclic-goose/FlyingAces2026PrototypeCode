@@ -64,14 +64,64 @@ public class Limelight extends SubsystemBase {
     return table.getEntry("tv").getDouble(0.0) == 1.0;
   }
 
+  /** Returns the primary target AprilTag ID, or -1 if none. */
   public double getTagID() {
     return table.getEntry("tid").getDouble(-1);
+  }
+
+  /** Returns the number of AprilTags seen in the current MegaTag2 solution. */
+  public int getTagCount() {
+    double[] data = table.getEntry("botpose_orb_wpiblue").getDoubleArray(new double[0]);
+    if (data.length >= 8) {
+      return (int) data[7];
+    }
+    return 0;
+  }
+
+  /**
+   * Returns the robot's field-relative pose from MegaTag2. Returns null if no valid solution. Uses
+   * botpose_orb_wpiblue which relies on the gyro for rotation (fed via robot_orientation_set).
+   */
+  public Pose2d getBotPose() {
+    double[] data = table.getEntry("botpose_orb_wpiblue").getDoubleArray(new double[0]);
+    if (data.length < 7) return null;
+    if (data[0] == 0.0 && data[1] == 0.0 && data[5] == 0.0) return null;
+    return new Pose2d(new Translation2d(data[0], data[1]), Rotation2d.fromDegrees(data[5]));
+  }
+
+  /**
+   * Returns the MegaTag2 capture latency in seconds. Index 6 contains total latency in
+   * milliseconds.
+   */
+  public double getLatencySeconds() {
+    double[] data = table.getEntry("botpose_orb_wpiblue").getDoubleArray(new double[0]);
+    if (data.length >= 7) {
+      return data[6] / 1000.0;
+    }
+    return 0.0;
+  }
+
+  /**
+   * Computes vision measurement standard deviations scaled by distance. MegaTag2 uses the gyro for
+   * rotation, so theta std dev is MAX_VALUE to prevent vision from overriding heading.
+   */
+  private Matrix<N3, N1> getStdDevs(Pose2d visionPose) {
+    int tagCount = getTagCount();
+    if (tagCount == 0) {
+      return VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+    }
+
+    double avgDist = visionPose.getTranslation().getDistance(drive.getPose().getTranslation());
+    double distScale = 1.0 + (avgDist * avgDist);
+    double tagScale = tagCount >= 2 ? MULTI_TAG_SCALE : 1.0;
+    double xyStdDev = XY_STD_DEV_BASE * distScale * tagScale;
+
+    return VecBuilder.fill(xyStdDev, xyStdDev, Double.MAX_VALUE);
   }
 
   @Override
   public void periodic() {
     // Feed current gyro heading to the Limelight for MegaTag2
-    // Format: [yaw, yawRate, pitch, pitchRate, roll, rollRate]
     double yawDegrees = drive.getRotation().getDegrees();
     table
         .getEntry("robot_orientation_set")
@@ -89,10 +139,7 @@ public class Limelight extends SubsystemBase {
     Logger.recordOutput("Limelight/BotPose", botPose);
     Logger.recordOutput("Limelight/TagCount", getTagCount());
 
-    // Compute the timestamp when the image was actually captured
     double timestamp = Timer.getFPGATimestamp() - getLatencySeconds();
-
-    // Feed the vision measurement into the drive pose estimator
     Matrix<N3, N1> stdDevs = getStdDevs(botPose);
     drive.addVisionMeasurement(botPose, timestamp, stdDevs);
   }

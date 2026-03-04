@@ -222,12 +222,12 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    // Hold Y to align to April tag target
+    // Hold Y to align to visible AprilTag using Limelight tx
     controller
         .y()
         .whileTrue(
             DriveCommands.alignToTarget(
-                drive, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
+                drive, limelight, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
   }
 
   /**
