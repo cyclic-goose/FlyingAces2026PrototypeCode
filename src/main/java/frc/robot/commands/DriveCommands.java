@@ -23,7 +23,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.drive.Drive;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -157,14 +156,12 @@ public class DriveCommands {
   }
 
   /**
-   * Field relative drive command using MegaTag pose estimation to align to the goal. This
-   * differentiates between tags by targeting the static goal coordinate rather than the camera's
-   * raw crosshair offset.
+   * Field relative drive command that aligns the robot's heading to face the alliance goal. Uses
+   * the fused pose estimator (odometry + vision) for a smooth, stable heading calculation.
    */
   public static Command alignToTarget(
-      Drive drive, Limelight limelight, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
+      Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
 
-    // Use a ProfiledPIDController for smoother rotation into the target
     ProfiledPIDController angleController =
         new ProfiledPIDController(
             ANGLE_KP,
@@ -172,6 +169,7 @@ public class DriveCommands {
             ANGLE_KD,
             new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
     angleController.enableContinuousInput(-Math.PI, Math.PI);
+    angleController.setTolerance(Math.toRadians(1.0));
 
     return Commands.run(
             () -> {
@@ -179,15 +177,8 @@ public class DriveCommands {
               Translation2d linearVelocity =
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-              // 2. Determine current Robot Pose
-              // Prefer Limelight MegaTag pose if valid, otherwise fallback to Odometry
+              // 2. Use the fused pose (odometry + vision corrections) for stable heading
               Pose2d robotPose = drive.getPose();
-              if (limelight.hasTarget()) {
-                Pose2d botPose = limelight.getBotPose();
-                if (botPose != null) {
-                  robotPose = botPose;
-                }
-              }
 
               // 3. Determine Goal Position based on Alliance
               boolean isRed =
@@ -196,11 +187,11 @@ public class DriveCommands {
               Translation2d goalLocation = isRed ? RED_GOAL : BLUE_GOAL;
 
               // 4. Calculate Desired Angle to Goal
-              // Math.atan2(dy, dx) gives the angle from robot to goal
+              // Rotation2d(x, y) computes atan2(y, x), so pass (dx, dy) to get atan2(dy, dx)
               Rotation2d targetRotation =
                   new Rotation2d(
-                      goalLocation.getY() - robotPose.getY(),
-                      goalLocation.getX() - robotPose.getX());
+                      goalLocation.getX() - robotPose.getX(),
+                      goalLocation.getY() - robotPose.getY());
 
               // 5. Calculate PID Output
               double omega =
@@ -217,7 +208,7 @@ public class DriveCommands {
               drive.runVelocity(
                   ChassisSpeeds.fromFieldRelativeSpeeds(
                       speeds,
-                      isRed // Field-relative flip
+                      isRed
                           ? drive.getRotation().plus(new Rotation2d(Math.PI))
                           : drive.getRotation()));
             },
