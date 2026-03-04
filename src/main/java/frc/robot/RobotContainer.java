@@ -196,18 +196,18 @@ public class RobotContainer {
         .rightBumper()
         .whileTrue(
             Commands.runEnd(
-                () -> shooter.runFeedMove(-0.2), () -> shooter.runFeedMove(0), shooter));
+                () -> shooter.runFeedMove(-0.3), () -> shooter.runFeedMove(0), shooter));
 
     // Left Trigger: Run Feed Motor
     controller
         .leftTrigger()
-        .whileTrue(Commands.runEnd(() -> shooter.runFeed(0.5), () -> shooter.runFeed(0), shooter));
+        .whileTrue(Commands.runEnd(() -> shooter.runFeed(0.3), () -> shooter.runFeed(0), shooter));
 
     // Right Trigger: Run Shooter (Launch + Transfer)
     // Launch at 80%, Transfer at 60% (Adjust these values as needed)
     controller
         .rightTrigger()
-        .whileTrue(Commands.runEnd(() -> shooter.runShooter(0.6, -0.5), shooter::stop, shooter));
+        .whileTrue(Commands.runEnd(() -> shooter.runShooter(0.5, 0.4), shooter::stop, shooter));
 
     // --- SHOOTER BINDINGS ---
 
