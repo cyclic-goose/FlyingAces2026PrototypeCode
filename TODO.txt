@@ -62,6 +62,50 @@ Pipeline not set to AprilTags — In the Limelight UI, make sure the active pipe
 
 
 
+
+
+
+
+
+
+
+
+
+
+More complex tag stuff
+
+
+
+Limelight Web Interface Configuration
+Go to http://limelight.local:5801 (or the IP) and set:
+
+Pipeline Settings:
+
+Pipeline Type: AprilTag
+Family: 36h11 (this is what FRC uses)
+Detector Downscale: 2 (good balance of speed and range; use 1 for more range but slower)
+Input Tab:
+
+Resolution: 1280x960 or 640x480 (higher = more range, lower = faster)
+LED Mode: Off (LEDs aren't needed for AprilTags)
+Output Tab:
+
+Sort Mode: Closest (this ensures tx/tid report the nearest tag, which is what you want)
+Leave crosshair at default (0,0) unless you need an offset
+Filtering (if available in your firmware):
+
+You can leave tag ID filtering off if you want it to align to any tag
+If you only want reef/goal tags, you can whitelist specific IDs
+Making Sure It Works
+Bench test first — power on the Limelight, open the web UI, point it at an AprilTag, and verify tx/ty/tv update in the web dashboard
+Check NetworkTables — open Shuffleboard or AdvantageScope and confirm limelight/tx, limelight/tv, etc. show up with correct values
+Tune PID — your current gains (kP=0.1, kD=0.005) are a reasonable starting point. If the robot oscillates around the target, lower kP. If it's too sluggish, raise it. Test on carpet, not on a slick surface
+Tolerance — currently 1.0 degree, which is fine for general alignment. Tighten to 0.5 if you need precision
+Goal Posts with Two Tags
+Since goal posts have two AprilTags, the Limelight will lock onto whichever is closer/more visible. This is fine for alignment — both tags on the same post will give you roughly the same tx heading. The "Sort Mode: Closest" setting ensures consistent behavior as you approach.
+
+
+
 Field map — Make sure you've selected the correct game's AprilTag field map (2025/2026) so the Limelight knows where each tag is physically located on the field. This is critical for botpose to return accurate positions.
 
 Camera resolution — Higher resolution improves tag detection at distance but increases latency. A common choice is 1280x960 for a good balance.
