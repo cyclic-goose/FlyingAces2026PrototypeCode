@@ -56,3 +56,20 @@ Wrong IP subnet — The Limelight, RoboRIO, and radio must all be on 10.TE.AM.x.
 Team number mismatch — Set the team number in both the Limelight web UI and the RoboRIO imaging tool.
 Firewall on your laptop — If you can't reach limelight.local:5801, try the static IP directly (e.g., http://10.12.34.11:5801).
 Pipeline not set to AprilTags — In the Limelight UI, make sure the active pipeline is configured for AprilTag detection, not retroreflective or color.
+
+
+
+
+
+
+Field map — Make sure you've selected the correct game's AprilTag field map (2025/2026) so the Limelight knows where each tag is physically located on the field. This is critical for botpose to return accurate positions.
+
+Camera resolution — Higher resolution improves tag detection at distance but increases latency. A common choice is 1280x960 for a good balance.
+
+Pipeline index — Make sure the pipeline you configured is pipeline 0 (or whichever your code expects — your code doesn't set a pipeline, so it defaults to 0).
+
+Stream mode — Set to "Standard" unless you have a second camera.
+
+IP address — Your code uses the default NetworkTable name "limelight". If you renamed your Limelight (e.g., "limelight-front"), you'd need to update line 39 to match.
+
+3D mode — Make sure "3D" or "Solve PnP" is enabled in the pipeline, since your code uses botpose_orb_wpiblue which requires the 3D solver.

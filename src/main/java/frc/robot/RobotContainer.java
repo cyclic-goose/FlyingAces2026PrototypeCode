@@ -40,8 +40,6 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
 
-  // Limelight feeds vision measurements into the drive pose estimator each periodic cycle
-  @SuppressWarnings("unused")
   private final Limelight limelight;
 
   // with the talon library this is how we would instantiate a new Talon motor - Brenden
@@ -112,8 +110,7 @@ public class RobotContainer {
         break;
     }
 
-    // Initialize limelight with drive so it can feed vision into the pose estimator
-    limelight = new Limelight(drive);
+    limelight = new Limelight();
 
     // init autochooser
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
