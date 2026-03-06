@@ -203,7 +203,7 @@ public class RobotContainer {
         .rightBumper()
         .whileTrue(
             Commands.runEnd(
-                () -> shooter.runFeedMove(-0.3), () -> shooter.runFeedMove(0), shooter));
+                () -> shooter.runFeedMove(-0.1), () -> shooter.runFeedMove(0), shooter));
 
     // Left Trigger: Run Feed Motor
     controller
