@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -11,6 +12,10 @@ public class Shooter extends SubsystemBase {
   private final WPI_TalonSRX feedMoveMotor;
   private final TalonFX transferMotor;
   private final TalonFX launchMotor;
+  private final CANrange canRange;
+
+  // Distance threshold in meters - if the CANRange reads below this, the intake is too far out
+  private static final double FEED_MOVE_LIMIT_DISTANCE = 0.1;
 
   public Shooter(int feedMotorID, int feedMoveMotorID, int transferMotorID, int launchMotorID) {
     // 1. Initialize Feed Motor (Phoenix 5)
@@ -39,6 +44,14 @@ public class Shooter extends SubsystemBase {
 
     launchMotor = new TalonFX(launchMotorID);
     launchMotor.getConfigurator().apply(config);
+
+    // 4. Initialize CANRange sensor (limit switch for feed move)
+    canRange = new CANrange(19);
+  }
+
+  /** Returns true when the CANRange detects the intake has extended too far. */
+  public boolean isFeedMoveAtLimit() {
+    return canRange.getDistance().getValueAsDouble() < FEED_MOVE_LIMIT_DISTANCE;
   }
 
   /** Run the Feed Move motor (Bumpers) */

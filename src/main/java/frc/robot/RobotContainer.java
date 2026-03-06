@@ -183,10 +183,20 @@ public class RobotContainer {
     // --- SHOOTER BINDINGS ---
 
     // Left Bumper: FeedMove Forward (Intaking direction?)
+    // CANRange acts as a limit switch - blocks power when intake extends too far
     controller
         .leftBumper()
         .whileTrue(
-            Commands.runEnd(() -> shooter.runFeedMove(0.2), () -> shooter.runFeedMove(0), shooter));
+            Commands.runEnd(
+                () -> {
+                  if (!shooter.isFeedMoveAtLimit()) {
+                    shooter.runFeedMove(0.2);
+                  } else {
+                    shooter.runFeedMove(0);
+                  }
+                },
+                () -> shooter.runFeedMove(0),
+                shooter));
 
     // Right Bumper: FeedMove Backward (Ejecting direction?)
     controller
