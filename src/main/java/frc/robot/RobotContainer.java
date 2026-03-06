@@ -186,14 +186,14 @@ public class RobotContainer {
     controller
         .leftBumper()
         .whileTrue(
-            Commands.runEnd(() -> shooter.runFeedMove(0.2), () -> shooter.runFeedMove(0), shooter));
+            Commands.runEnd(() -> shooter.runFeedMove(0.1), () -> shooter.runFeedMove(0), shooter));
 
     // Right Bumper: FeedMove Backward (Ejecting direction?)
     controller
         .rightBumper()
         .whileTrue(
             Commands.runEnd(
-                () -> shooter.runFeedMove(-0.3), () -> shooter.runFeedMove(0), shooter));
+                () -> shooter.runFeedMove(-0.1), () -> shooter.runFeedMove(0), shooter));
 
     // Left Trigger: Run Feed Motor
     controller
