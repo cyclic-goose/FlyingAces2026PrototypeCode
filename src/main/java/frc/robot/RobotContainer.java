@@ -43,7 +43,7 @@ public class RobotContainer {
   private final Limelight limelight;
 
   // with the talon library this is how we would instantiate a new Talon motor - Brenden
-  private final Shooter shooter = new Shooter(15, 16, 17, 18);
+  private final Shooter shooter = new Shooter(16, 15, 17, 18);
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -118,7 +118,7 @@ public class RobotContainer {
     Command simpleAuto =
         Commands.sequence(
             // 1. Spin up shooter and feed
-            Commands.runEnd(() -> shooter.runShooter(0.8, 0.6), shooter::stop, shooter)
+            Commands.runEnd(() -> shooter.runShooter(0.6, 0.5), shooter::stop, shooter)
                 .withTimeout(1.0), // Run for 1 second
 
             // 2. Drive backward at 1 m/s
@@ -186,19 +186,19 @@ public class RobotContainer {
     controller
         .leftBumper()
         .whileTrue(
-            Commands.runEnd(() -> shooter.runFeedMove(0.1), () -> shooter.runFeedMove(0), shooter));
+            Commands.runEnd(
+                () -> shooter.runFeedMove(-0.5), () -> shooter.runFeedMove(0), shooter));
 
     // Right Bumper: FeedMove Backward (Ejecting direction?)
     controller
         .rightBumper()
         .whileTrue(
-            Commands.runEnd(
-                () -> shooter.runFeedMove(-0.1), () -> shooter.runFeedMove(0), shooter));
+            Commands.runEnd(() -> shooter.runFeedMove(0.5), () -> shooter.runFeedMove(0), shooter));
 
     // Left Trigger: Run Feed Motor
     controller
         .leftTrigger()
-        .whileTrue(Commands.runEnd(() -> shooter.runFeed(0.3), () -> shooter.runFeed(0), shooter));
+        .whileTrue(Commands.runEnd(() -> shooter.runFeed(0.5), () -> shooter.runFeed(0), shooter));
 
     // Right Trigger: Run Shooter (Launch + Transfer)
     // Launch at 80%, Transfer at 60% (Adjust these values as needed)
