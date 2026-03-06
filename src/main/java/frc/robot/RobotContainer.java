@@ -190,7 +190,7 @@ public class RobotContainer {
             Commands.runEnd(
                 () -> {
                   if (!shooter.isFeedMoveAtLimit()) {
-                    shooter.runFeedMove(0.2);
+                    shooter.runFeedMove(0.1);
                   } else {
                     shooter.runFeedMove(0);
                   }
