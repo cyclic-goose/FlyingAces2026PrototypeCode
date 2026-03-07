@@ -60,8 +60,13 @@ public class Shooter extends SubsystemBase {
    * * Run the Shooter mechanism (Right Trigger). Usually Launch is faster than Transfer to ensure
    * clean exit.
    */
-  public void runShooter(double launchSpeed, double transferSpeed) {
+  public void runShooter(double launchSpeed) {
     launchMotor.set(launchSpeed);
+    // transferMotor.set(transferSpeed); // disabled running transfer from right trigger
+  }
+
+  // method to separate transfer from shoot
+  public void runTransfer(double transferSpeed) {
     transferMotor.set(transferSpeed);
   }
   // Limit switch check commands

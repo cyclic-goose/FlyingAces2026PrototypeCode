@@ -77,7 +77,7 @@ public class TunerConstants {
   // "" = RoboRIO CAN bus (CAN 2.0, 100 Hz odometry)
   // If using a CANivore, set to its name (e.g., "canivore") for CAN FD (250 Hz odometry)
   public static final CANBus kCANBus = new CANBus("", "./logs/example.hoot");
- 
+
   // Theoretical free speed (m/s) at 12 V applied output;
   // This needs to be tuned to your individual robot
   public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(5.5);

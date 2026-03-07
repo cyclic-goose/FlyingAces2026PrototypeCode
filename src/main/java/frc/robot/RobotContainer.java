@@ -123,7 +123,7 @@ public class RobotContainer {
                     () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)), // Stop at end
                     drive)
                 .withTimeout(2.0), // Run for 2 seconds
-            Commands.runEnd(() -> shooter.runShooter(0.6, 0.5), shooter::stop, shooter)
+            Commands.runEnd(() -> shooter.runShooter(0.6), shooter::stop, shooter)
                 .withTimeout(1.0) // Run for 1 second
             );
 
@@ -201,6 +201,7 @@ public class RobotContainer {
             () -> {
               double leftTrigger = controller.getLeftTriggerAxis();
               double rightTrigger = controller.getRightTriggerAxis();
+
               if (leftTrigger > 0.1) {
                 shooter.runFeed(0.75);
               } else {
@@ -208,13 +209,19 @@ public class RobotContainer {
               }
 
               if (rightTrigger > 0.1) {
-                shooter.runShooter(0.95, -0.6);
+                shooter.runShooter(0.65);
               } else {
-                shooter.runShooter(0, 0);
+                shooter.runShooter(0);
               }
             },
             shooter));
 
+    // experimental run feed backwards
+    controller
+        .x()
+        .whileTrue(
+            Commands.runEnd(
+                () -> shooter.runTransfer(-0.55), () -> shooter.runTransfer(0), shooter));
     // Right Bumper: FeedMove Backward (Ejecting direction?)
     controller
         .rightBumper()
@@ -240,7 +247,7 @@ public class RobotContainer {
     // Launch at 80%, Transfer at 60% (Adjust these values as needed)
     controller
         .rightTrigger()
-        .whileTrue(Commands.runEnd(() -> shooter.runShooter(0.6, -0.6), shooter::stop, shooter));
+        .whileTrue(Commands.runEnd(() -> shooter.runShooter(0.6), shooter::stop, shooter));
 
     // --- SHOOTER BINDINGS ---
 
