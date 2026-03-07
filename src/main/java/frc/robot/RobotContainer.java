@@ -203,7 +203,7 @@ public class RobotContainer {
           double leftTrigger = controller.getLeftTriggerAxis();
           double rightTrigger = controller.getRightTriggerAxis();
           if (leftTrigger > 0.1) {
-            shooter.runFeed(0.65);
+            shooter.runFeed(0.75);
           }else {
             shooter.runFeed(0);
           }
