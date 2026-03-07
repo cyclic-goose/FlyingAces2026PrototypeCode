@@ -13,6 +13,9 @@ public class Shooter extends SubsystemBase {
   private final TalonFX transferMotor;
   private final TalonFX launchMotor;
 
+  private final DigitalInput limitSwitchBack = new DigitalInput(1);
+  private final DigitalInput limitSwitchFront = new DigitalInput(0);
+
   public Shooter(int feedMotorID, int feedMoveMotorID, int transferMotorID, int launchMotorID) {
     // 1. Initialize Feed Motor (Phoenix 5)
     feedMotor = new WPI_TalonSRX(feedMotorID);
