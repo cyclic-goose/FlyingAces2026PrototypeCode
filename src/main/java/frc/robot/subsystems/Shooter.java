@@ -75,7 +75,8 @@ public class Shooter extends SubsystemBase {
 
   /** Stop all motors */
   public void stop() {
-    feedMotor.set(ControlMode.PercentOutput, 0);
+    // commented out because binary on left trigger sets zero
+    // feedMotor.set(ControlMode.PercentOutput, 0);
     feedMoveMotor.set(ControlMode.PercentOutput, 0);
     transferMotor.stopMotor();
     launchMotor.stopMotor();

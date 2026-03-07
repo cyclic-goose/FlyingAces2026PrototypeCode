@@ -226,7 +226,7 @@ public class RobotContainer {
     // Launch at 80%, Transfer at 60% (Adjust these values as needed)
     controller
         .rightTrigger()
-        .whileTrue(Commands.runEnd(() -> shooter.runShooter(0.5, 0.4), shooter::stop, shooter));
+        .whileTrue(Commands.runEnd(() -> shooter.runShooter(0.6, -0.6), shooter::stop, shooter));
 
     // --- SHOOTER BINDINGS ---
 
