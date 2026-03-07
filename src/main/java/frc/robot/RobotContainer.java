@@ -216,6 +216,21 @@ public class RobotContainer {
             },
             shooter));
 
+    // Right Bumper: FeedMove Backward (Ejecting direction?)
+    controller
+        .rightBumper()
+        .whileTrue(
+            Commands.runEnd(
+                () -> {
+                  if (!shooter.isFeedLimitBackPressed()) {
+                    shooter.runFeedMove(0.65);
+                  } else {
+                    shooter.runFeedMove(0);
+                  }
+                },
+                () -> shooter.runFeedMove(0),
+                shooter));
+
     // experimental run feed backwards
     controller
         .b()
