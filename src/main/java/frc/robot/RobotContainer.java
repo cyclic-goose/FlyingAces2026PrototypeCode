@@ -182,18 +182,41 @@ public class RobotContainer {
 
     // --- SHOOTER BINDINGS ---
 
-    // Left Bumper: FeedMove Forward (Intaking direction?)
+    //Left Bumper: FeedMove Forward (Intaking direction?)
     controller
         .leftBumper()
         .whileTrue(
             Commands.runEnd(
-                () -> shooter.runFeedMove(-0.5), () -> shooter.runFeedMove(0), shooter));
+                () -> {
+                    if (!shooter.isFeedLimitBackPressed()) {
+                        shooter.runFeedMove(-0.5); 
+                    }else {
+                        shooter.runFeedMove(0);
+                    }
+                },
+                () -> shooter.runFeedMove(0),
+                shooter
+            )
+            
+        );
 
-    // Right Bumper: FeedMove Backward (Ejecting direction?)
+    //Right Bumper: FeedMove Backward (Ejecting direction?)
     controller
         .rightBumper()
         .whileTrue(
-            Commands.runEnd(() -> shooter.runFeedMove(0.5), () -> shooter.runFeedMove(0), shooter));
+            Commands.runEnd(() -> {
+                    if (!shooter.isFeedLimitFrontPressed()) {
+                        shooter.runFeedMove(0.5); 
+                    }else {
+                        shooter.runFeedMove(0);
+                    }
+                },
+                () -> shooter.runFeedMove(0),
+                shooter
+            )
+            
+        );
+
 
     // Left Trigger: Run Feed Motor
     controller
