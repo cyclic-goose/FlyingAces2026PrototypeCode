@@ -47,6 +47,7 @@ public class Shooter extends SubsystemBase {
 
   /** Run the Feed Move motor (Bumpers) */
   public void runFeedMove(double speed) {
+
     feedMoveMotor.set(ControlMode.PercentOutput, speed);
   }
 
@@ -63,7 +64,6 @@ public class Shooter extends SubsystemBase {
     launchMotor.set(launchSpeed);
     transferMotor.set(transferSpeed);
   }
-
   // Limit switch check commands
   public boolean isFeedLimitBackPressed() {
     return !limitSwitchBack.get();
