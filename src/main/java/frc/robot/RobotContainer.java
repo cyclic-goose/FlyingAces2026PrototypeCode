@@ -196,25 +196,27 @@ public class RobotContainer {
                 () -> shooter.runFeedMove(0),
                 shooter));
 
-    // Right Bumper: FeedMove Backward (Ejecting direction?)
-    controller
-        .rightBumper()
-        .whileTrue(
-            Commands.runEnd(
-                () -> {
-                  if (!shooter.isFeedLimitBackPressed()) {
-                    shooter.runFeedMove(0.65);
-                  } else {
-                    shooter.runFeedMove(0);
-                  }
-                },
-                () -> shooter.runFeedMove(0),
-                shooter));
+                // combined left and right trigger command
+    shooter.setDefaultCommand(
+      Commands.run(
+        () -> {
+          double leftTrigger = controller.getLeftTriggerAxis();
+          double rightTrigger = controller.getRightTriggerAxis();
+          if (leftTrigger > 0.1) {
+            shooter.runFeed(0.65);
+          }else {
+            shooter.runFeed(0);
+          }
 
-    // Left Trigger: Run Feed Motor
-    controller
-        .leftTrigger()
-        .whileTrue(Commands.runEnd(() -> shooter.runFeed(0.75), () -> shooter.runFeed(0), shooter));
+          if (rightTrigger > 0.1) {
+            shooter.runShooter(0.7, 0.5);
+          } else {
+            shooter.runShooter(0, 0);
+          }
+
+
+        }, shooter)
+    );
 
     // experimental run feed backwards
     controller
