@@ -8,7 +8,6 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -188,8 +187,8 @@ public class RobotContainer {
         .whileTrue(
             Commands.runEnd(
                 () -> {
-                  if (!shooter.isFeedLimitBackPressed()) {
-                    shooter.runFeedMove(-0.5);
+                  if (!shooter.isFeedLimitFrontPressed()) {
+                    shooter.runFeedMove(-0.55);
                   } else {
                     shooter.runFeedMove(0);
                   }
@@ -203,8 +202,8 @@ public class RobotContainer {
         .whileTrue(
             Commands.runEnd(
                 () -> {
-                  if (!shooter.isFeedLimitFrontPressed()) {
-                    shooter.runFeedMove(0.5);
+                  if (!shooter.isFeedLimitBackPressed()) {
+                    shooter.runFeedMove(0.65);
                   } else {
                     shooter.runFeedMove(0);
                   }
@@ -215,7 +214,13 @@ public class RobotContainer {
     // Left Trigger: Run Feed Motor
     controller
         .leftTrigger()
-        .whileTrue(Commands.runEnd(() -> shooter.runFeed(0.5), () -> shooter.runFeed(0), shooter));
+        .whileTrue(Commands.runEnd(() -> shooter.runFeed(0.75), () -> shooter.runFeed(0), shooter));
+
+    // experimental run feed backwards
+    controller
+        .b()
+        .whileTrue(
+            Commands.runEnd(() -> shooter.runFeed(-0.55), () -> shooter.runFeed(0), shooter));
 
     // Right Trigger: Run Shooter (Launch + Transfer)
     // Launch at 80%, Transfer at 60% (Adjust these values as needed)
@@ -226,15 +231,15 @@ public class RobotContainer {
     // --- SHOOTER BINDINGS ---
 
     // Reset gyro to 0° when B button is pressed
-    controller
-        .b()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                    drive)
-                .ignoringDisable(true));
+    // controller
+    //     .b()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //                 () ->
+    //                     drive.setPose(
+    //                         new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+    //                 drive)
+    //             .ignoringDisable(true));
 
     // Hold Y to align to visible AprilTag using Limelight tx
     controller
