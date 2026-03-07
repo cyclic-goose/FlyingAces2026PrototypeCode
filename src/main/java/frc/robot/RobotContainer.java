@@ -117,15 +117,14 @@ public class RobotContainer {
     Command simpleAuto =
         Commands.sequence(
             // 1. Spin up shooter and feed
-            Commands.runEnd(() -> shooter.runShooter(0.6, 0.5), shooter::stop, shooter)
-                .withTimeout(1.0), // Run for 1 second
-
             // 2. Drive backward at 1 m/s
             Commands.runEnd(
-                    () -> drive.runVelocity(new ChassisSpeeds(-1.0, 0.0, 0.0)), // -X is backward
+                    () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 1.57)), // -X is backward
                     () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)), // Stop at end
                     drive)
-                .withTimeout(2.0) // Run for 2 seconds
+                .withTimeout(2.0), // Run for 2 seconds
+            Commands.runEnd(() -> shooter.runShooter(0.6, 0.5), shooter::stop, shooter)
+                .withTimeout(1.0) // Run for 1 second
             );
 
     // Add to the chooser
