@@ -119,7 +119,7 @@ public class RobotContainer {
             // 1. Spin up shooter and feed
             // 2. Drive backward at 1 m/s
             Commands.runEnd(
-                    () -> drive.runVelocity(new ChassisSpeeds(-1.5, 0.0, 0.39)), // -X is backward
+                    () -> drive.runVelocity(new ChassisSpeeds(1.5, 0.0, 0.39)), // -X is backward
                     () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)), // Stop at end
                     drive)
                 .withTimeout(2.0), // Run for 2 seconds
