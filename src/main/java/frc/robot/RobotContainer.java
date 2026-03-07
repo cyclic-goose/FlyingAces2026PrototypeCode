@@ -119,7 +119,7 @@ public class RobotContainer {
             // 1. Spin up shooter and feed
             // 2. Drive backward at 1 m/s
             Commands.runEnd(
-                    () -> drive.runVelocity(new ChassisSpeeds(-0.25, 0.0, 0)), // -X is backward
+                    () -> drive.runVelocity(new ChassisSpeeds(-1.5, 0.0, 0.39)), // -X is backward
                     () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)), // Stop at end
                     drive)
                 .withTimeout(2.0), // Run for 2 seconds
@@ -208,7 +208,7 @@ public class RobotContainer {
               }
 
               if (rightTrigger > 0.1) {
-                shooter.runShooter(0.7, -0.6);
+                shooter.runShooter(0.95, -0.6);
               } else {
                 shooter.runShooter(0, 0);
               }
@@ -222,7 +222,7 @@ public class RobotContainer {
             Commands.runEnd(
                 () -> {
                   if (!shooter.isFeedLimitBackPressed()) {
-                    shooter.runFeedMove(0.65);
+                    shooter.runFeedMove(0.75);
                   } else {
                     shooter.runFeedMove(0);
                   }
