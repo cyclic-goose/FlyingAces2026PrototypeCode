@@ -64,6 +64,15 @@ public class Shooter extends SubsystemBase {
     transferMotor.set(transferSpeed);
   }
 
+    //Limit switch check commands
+  public boolean isFeedLimitBackPressed(){
+    return !limitSwitchBack.get();
+  }
+
+  public boolean isFeedLimitFrontPressed(){
+    return !limitSwitchFront.get();
+  }
+
   /** Stop all motors */
   public void stop() {
     feedMotor.set(ControlMode.PercentOutput, 0);
