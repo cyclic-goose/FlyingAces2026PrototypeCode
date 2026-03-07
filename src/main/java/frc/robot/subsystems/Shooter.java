@@ -64,12 +64,12 @@ public class Shooter extends SubsystemBase {
     transferMotor.set(transferSpeed);
   }
 
-    //Limit switch check commands
-  public boolean isFeedLimitBackPressed(){
+  // Limit switch check commands
+  public boolean isFeedLimitBackPressed() {
     return !limitSwitchBack.get();
   }
 
-  public boolean isFeedLimitFrontPressed(){
+  public boolean isFeedLimitFrontPressed() {
     return !limitSwitchFront.get();
   }
 
