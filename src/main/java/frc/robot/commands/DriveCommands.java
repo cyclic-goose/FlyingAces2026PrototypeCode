@@ -25,7 +25,7 @@ public class DriveCommands {
   private static final double ANGLE_MAX_ACCELERATION = 20.0;
 
   // Align-to-tag PID constants
-  private static final double ALIGN_KP = 0.1;
+  private static final double ALIGN_KP = 0.06;
   private static final double ALIGN_KD = 0.005;
 
   private DriveCommands() {}
@@ -140,7 +140,7 @@ public class DriveCommands {
 
               double omega = 0.0;
               if (limelight.hasGoalTarget()) {
-                omega = -angleController.calculate(limelight.getTx());
+                omega = -angleController.calculate(limelight.getTx()) - 0.78 * 2;
               }
 
               ChassisSpeeds speeds =
@@ -164,7 +164,7 @@ public class DriveCommands {
         .beforeStarting(() -> angleController.reset(limelight.getTx()));
   }
 
-  private static final double SEARCH_ROTATE_SPEED = 1.5; // rad/s to spin while searching
+  private static final double SEARCH_ROTATE_SPEED = 3.5; // rad/s to spin while searching
 
   /**
    * Search for a goal tag by spinning, then PID-align to it. Supports joystick input for linear
@@ -179,7 +179,7 @@ public class DriveCommands {
             ALIGN_KD,
             new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
     angleController.setGoal(0.0);
-    angleController.setTolerance(1.0);
+    angleController.setTolerance(2.0);
 
     return Commands.run(
             () -> {
