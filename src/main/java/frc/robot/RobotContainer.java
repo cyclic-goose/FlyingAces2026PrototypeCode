@@ -176,7 +176,7 @@ public class RobotContainer {
                 () -> Rotation2d.kZero));
 
     // Switch to X pattern when X button is pressed
-    controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
     // --- SHOOTER BINDINGS ---
 
@@ -201,7 +201,7 @@ public class RobotContainer {
             () -> {
               double leftTrigger = controller.getLeftTriggerAxis();
               double rightTrigger = controller.getRightTriggerAxis();
-              
+              boolean isXPressed = controller.x().getAsBoolean();
 
               if (leftTrigger > 0.1) {
                 shooter.runFeed(0.75);
@@ -210,18 +210,18 @@ public class RobotContainer {
               }
 
               if (rightTrigger > 0.1) {
-                shooter.runShooter(0.75);
+                shooter.runShooter(0.85);
               } else {
                 shooter.runShooter(0);
               }
 
-              
+              if (isXPressed)
+              {
+                shooter.runTransfer(-0.55);
+              } else {
+                shooter.runTransfer(0);
+              }
 
-              controller
-                  .x()
-                  .whileTrue(
-                      Commands.runEnd(
-                          () -> shooter.runTransfer(-0.55), () -> shooter.runTransfer(0), shooter));
             },
             shooter));
 
