@@ -140,7 +140,7 @@ public class DriveCommands {
 
               double omega = 0.0;
               if (limelight.hasGoalTarget()) {
-                omega = -angleController.calculate(limelight.getTx()) - 0.78 * 2;
+                omega = -angleController.calculate(limelight.getTx());
               }
 
               ChassisSpeeds speeds =
