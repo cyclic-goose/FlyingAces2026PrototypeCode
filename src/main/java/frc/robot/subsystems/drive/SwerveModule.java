@@ -1,22 +1,10 @@
-// Copyright (c) 2021-2026 Littleton Robotics
-// http://github.com/Mechanical-Advantage
-//
-// Use of this source code is governed by a BSD
-// license that can be found in the LICENSE file
-// at the root directory of this project.
-
 package frc.robot.subsystems.drive;
-
-import static frc.robot.util.PhoenixUtil.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -29,72 +17,78 @@ import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.generated.TunerConstants;
 import java.util.Queue;
 
 /**
- * Module IO implementation for Talon FX drive motor controller, Talon FX turn motor controller, and
- * CANcoder. Configured using a set of module constants from Phoenix.
- *
- * <p>Device configuration and other behaviors not exposed by TunerConstants can be customized here.
+ * Represents a single swerve module with a TalonFX drive motor, TalonFX turn motor, and CANcoder.
+ * Handles motor configuration, control, and odometry sampling.
  */
-public class ModuleIOTalonFX implements ModuleIO {
+public class SwerveModule {
   private final SwerveModuleConstants<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       constants;
 
-  // Hardware objects
+  // Hardware
   private final TalonFX driveTalon;
   private final TalonFX turnTalon;
   private final CANcoder cancoder;
 
-  // Voltage control requests
+  // Control requests
   private final VoltageOut voltageRequest = new VoltageOut(0);
   private final PositionVoltage positionVoltageRequest = new PositionVoltage(0.0);
   private final VelocityVoltage velocityVoltageRequest = new VelocityVoltage(0.0);
 
-  // Torque-current control requests
-  private final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0);
-  private final PositionTorqueCurrentFOC positionTorqueCurrentRequest =
-      new PositionTorqueCurrentFOC(0.0);
-  private final VelocityTorqueCurrentFOC velocityTorqueCurrentRequest =
-      new VelocityTorqueCurrentFOC(0.0);
-
-  // Timestamp inputs from Phoenix thread
+  // Odometry queues (sampled by PhoenixOdometryThread)
   private final Queue<Double> timestampQueue;
-
-  // Inputs from drive motor
-  private final StatusSignal<Angle> drivePosition;
   private final Queue<Double> drivePositionQueue;
+  private final Queue<Double> turnPositionQueue;
+
+  // Status signals
+  private final StatusSignal<Angle> drivePosition;
   private final StatusSignal<AngularVelocity> driveVelocity;
   private final StatusSignal<Voltage> driveAppliedVolts;
   private final StatusSignal<Current> driveCurrent;
-
-  // Inputs from turn motor
   private final StatusSignal<Angle> turnAbsolutePosition;
   private final StatusSignal<Angle> turnPosition;
-  private final Queue<Double> turnPositionQueue;
   private final StatusSignal<AngularVelocity> turnVelocity;
   private final StatusSignal<Voltage> turnAppliedVolts;
   private final StatusSignal<Current> turnCurrent;
 
-  // Connection debouncers
+  // Connection monitoring
   private final Debouncer driveConnectedDebounce =
       new Debouncer(0.5, Debouncer.DebounceType.kFalling);
   private final Debouncer turnConnectedDebounce =
       new Debouncer(0.5, Debouncer.DebounceType.kFalling);
-  private final Debouncer turnEncoderConnectedDebounce =
-      new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
-  public ModuleIOTalonFX(
+  private final Alert driveDisconnectedAlert;
+  private final Alert turnDisconnectedAlert;
+
+  // Cached state
+  private boolean driveConnected = false;
+  private boolean turnConnected = false;
+  private double drivePositionRad = 0.0;
+  private double driveVelocityRadPerSec = 0.0;
+  private Rotation2d turnAngle = Rotation2d.kZero;
+  private double[] cachedOdometryTimestamps = new double[] {};
+  private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
+
+  public SwerveModule(
+      int index,
       SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
           constants) {
     this.constants = constants;
+
+    // Create hardware
     driveTalon = new TalonFX(constants.DriveMotorId, TunerConstants.kCANBus);
     turnTalon = new TalonFX(constants.SteerMotorId, TunerConstants.kCANBus);
     cancoder = new CANcoder(constants.EncoderId, TunerConstants.kCANBus);
@@ -128,7 +122,7 @@ public class ModuleIOTalonFX implements ModuleIO {
           case FusedCANcoder -> FeedbackSensorSourceValue.FusedCANcoder;
           case SyncCANcoder -> FeedbackSensorSourceValue.SyncCANcoder;
           default -> throw new RuntimeException(
-              "You have selected a turn feedback source that is not supported by the default implementation of ModuleIOTalonFX. Please check the AdvantageKit documentation for more information on alternative configurations: https://docs.advantagekit.org/getting-started/template-projects/talonfx-swerve-template#custom-module-implementations");
+              "Unsupported feedback source: " + constants.FeedbackSource);
         };
     turnConfig.Feedback.RotorToSensorRatio = constants.SteerMotorGearRatio;
     turnConfig.MotionMagic.MotionMagicCruiseVelocity = 100.0 / constants.SteerMotorGearRatio;
@@ -152,17 +146,16 @@ public class ModuleIOTalonFX implements ModuleIO {
             : SensorDirectionValue.CounterClockwise_Positive;
     cancoder.getConfigurator().apply(cancoderConfig);
 
-    // Create timestamp queue
+    // Register with odometry thread for high-frequency sampling
     timestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
 
-    // Create drive status signals
+    // Create status signals
     drivePosition = driveTalon.getPosition();
     drivePositionQueue = PhoenixOdometryThread.getInstance().registerSignal(drivePosition.clone());
     driveVelocity = driveTalon.getVelocity();
     driveAppliedVolts = driveTalon.getMotorVoltage();
     driveCurrent = driveTalon.getStatorCurrent();
 
-    // Create turn status signals
     turnAbsolutePosition = cancoder.getAbsolutePosition();
     turnPosition = turnTalon.getPosition();
     turnPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(turnPosition.clone());
@@ -170,7 +163,7 @@ public class ModuleIOTalonFX implements ModuleIO {
     turnAppliedVolts = turnTalon.getMotorVoltage();
     turnCurrent = turnTalon.getStatorCurrent();
 
-    // Configure periodic frames
+    // Set update frequencies
     BaseStatusSignal.setUpdateFrequencyForAll(
         Drive.ODOMETRY_FREQUENCY, drivePosition, turnPosition);
     BaseStatusSignal.setUpdateFrequencyForAll(
@@ -183,84 +176,109 @@ public class ModuleIOTalonFX implements ModuleIO {
         turnAppliedVolts,
         turnCurrent);
     ParentDevice.optimizeBusUtilizationForAll(driveTalon, turnTalon);
+
+    // Alerts
+    driveDisconnectedAlert =
+        new Alert("Disconnected drive motor on module " + index + ".", AlertType.kError);
+    turnDisconnectedAlert =
+        new Alert("Disconnected turn motor on module " + index + ".", AlertType.kError);
   }
 
-  @Override
-  public void updateInputs(ModuleIOInputs inputs) {
-    // Refresh all signals
+  /** Read all sensor data and calculate odometry positions. Call once per robot loop. */
+  public void periodic() {
+    // Refresh signals
     var driveStatus =
         BaseStatusSignal.refreshAll(drivePosition, driveVelocity, driveAppliedVolts, driveCurrent);
     var turnStatus =
         BaseStatusSignal.refreshAll(turnPosition, turnVelocity, turnAppliedVolts, turnCurrent);
-    var turnEncoderStatus = BaseStatusSignal.refreshAll(turnAbsolutePosition);
 
-    // Update drive inputs
-    inputs.driveConnected = driveConnectedDebounce.calculate(driveStatus.isOK());
-    inputs.drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
-    inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
-    inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
-    inputs.driveCurrentAmps = driveCurrent.getValueAsDouble();
+    // Update cached state
+    driveConnected = driveConnectedDebounce.calculate(driveStatus.isOK());
+    turnConnected = turnConnectedDebounce.calculate(turnStatus.isOK());
+    drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
+    driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
+    turnAngle = Rotation2d.fromRotations(turnPosition.getValueAsDouble());
 
-    // Update turn inputs
-    inputs.turnConnected = turnConnectedDebounce.calculate(turnStatus.isOK());
-    inputs.turnEncoderConnected = turnEncoderConnectedDebounce.calculate(turnEncoderStatus.isOK());
-    inputs.turnAbsolutePosition = Rotation2d.fromRotations(turnAbsolutePosition.getValueAsDouble());
-    inputs.turnPosition = Rotation2d.fromRotations(turnPosition.getValueAsDouble());
-    inputs.turnVelocityRadPerSec = Units.rotationsToRadians(turnVelocity.getValueAsDouble());
-    inputs.turnAppliedVolts = turnAppliedVolts.getValueAsDouble();
-    inputs.turnCurrentAmps = turnCurrent.getValueAsDouble();
-
-    // Update odometry inputs
-    inputs.odometryTimestamps =
-        timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
-    inputs.odometryDrivePositionsRad =
+    // Drain high-frequency odometry samples from queues
+    cachedOdometryTimestamps = timestampQueue.stream().mapToDouble(Double::doubleValue).toArray();
+    double[] driveSamples =
         drivePositionQueue.stream()
-            .mapToDouble((Double value) -> Units.rotationsToRadians(value))
+            .mapToDouble(v -> Units.rotationsToRadians(v) * constants.WheelRadius)
             .toArray();
-    inputs.odometryTurnPositions =
-        turnPositionQueue.stream()
-            .map((Double value) -> Rotation2d.fromRotations(value))
-            .toArray(Rotation2d[]::new);
+    Rotation2d[] turnSamples =
+        turnPositionQueue.stream().map(v -> Rotation2d.fromRotations(v)).toArray(Rotation2d[]::new);
     timestampQueue.clear();
     drivePositionQueue.clear();
     turnPositionQueue.clear();
+
+    // Build odometry positions from samples
+    int sampleCount = cachedOdometryTimestamps.length;
+    odometryPositions = new SwerveModulePosition[sampleCount];
+    for (int i = 0; i < sampleCount; i++) {
+      odometryPositions[i] =
+          new SwerveModulePosition(
+              i < driveSamples.length ? driveSamples[i] : getPositionMeters(),
+              i < turnSamples.length ? turnSamples[i] : turnAngle);
+    }
+
+    // Update alerts
+    driveDisconnectedAlert.set(!driveConnected);
+    turnDisconnectedAlert.set(!turnConnected);
   }
 
-  @Override
-  public void setDriveOpenLoop(double output) {
+  /** Run the module with the specified setpoint state. Mutates the state to optimize it. */
+  public void runSetpoint(SwerveModuleState state) {
+    state.optimize(turnAngle);
+    state.cosineScale(turnAngle);
     driveTalon.setControl(
-        switch (constants.DriveMotorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(output);
-          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
-        });
+        velocityVoltageRequest.withVelocity(
+            Units.radiansToRotations(state.speedMetersPerSecond / constants.WheelRadius)));
+    turnTalon.setControl(positionVoltageRequest.withPosition(state.angle.getRotations()));
   }
 
-  @Override
-  public void setTurnOpenLoop(double output) {
-    turnTalon.setControl(
-        switch (constants.SteerMotorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(output);
-          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
-        });
+  /** Stop all motors. */
+  public void stop() {
+    driveTalon.setControl(voltageRequest.withOutput(0));
+    turnTalon.setControl(voltageRequest.withOutput(0));
   }
 
-  @Override
-  public void setDriveVelocity(double velocityRadPerSec) {
-    double velocityRotPerSec = Units.radiansToRotations(velocityRadPerSec);
-    driveTalon.setControl(
-        switch (constants.DriveMotorClosedLoopOutput) {
-          case Voltage -> velocityVoltageRequest.withVelocity(velocityRotPerSec);
-          case TorqueCurrentFOC -> velocityTorqueCurrentRequest.withVelocity(velocityRotPerSec);
-        });
+  public Rotation2d getAngle() {
+    return turnAngle;
   }
 
-  @Override
-  public void setTurnPosition(Rotation2d rotation) {
-    turnTalon.setControl(
-        switch (constants.SteerMotorClosedLoopOutput) {
-          case Voltage -> positionVoltageRequest.withPosition(rotation.getRotations());
-          case TorqueCurrentFOC -> positionTorqueCurrentRequest.withPosition(
-              rotation.getRotations());
-        });
+  public double getPositionMeters() {
+    return drivePositionRad * constants.WheelRadius;
+  }
+
+  public double getVelocityMetersPerSec() {
+    return driveVelocityRadPerSec * constants.WheelRadius;
+  }
+
+  public SwerveModulePosition getPosition() {
+    return new SwerveModulePosition(getPositionMeters(), getAngle());
+  }
+
+  public SwerveModuleState getState() {
+    return new SwerveModuleState(getVelocityMetersPerSec(), getAngle());
+  }
+
+  public SwerveModulePosition[] getOdometryPositions() {
+    return odometryPositions;
+  }
+
+  public double[] getOdometryTimestamps() {
+    return cachedOdometryTimestamps;
+  }
+
+  /** Retry a command up to the specified number of times until it succeeds. */
+  private static void tryUntilOk(int maxAttempts, Runnable command) {
+    for (int i = 0; i < maxAttempts; i++) {
+      try {
+        command.run();
+        return;
+      } catch (Exception e) {
+        if (i == maxAttempts - 1) throw e;
+      }
+    }
   }
 }

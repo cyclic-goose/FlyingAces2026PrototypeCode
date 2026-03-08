@@ -1,162 +1,54 @@
-// Copyright (c) 2021-2026 Littleton Robotics
-// http://github.com/Mechanical-Advantage
-//
-// Use of this source code is governed by a BSD
-// license that can be found in the LICENSE file
-// at the root directory of this project.
-
 package frc.robot;
-import com.pathplanner.lib.auto.AutoBuilder;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
-import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.GyroIO;
-import frc.robot.subsystems.drive.GyroIOPigeon2;
-import frc.robot.subsystems.drive.ModuleIO;
-import frc.robot.subsystems.drive.ModuleIOSim;
-import frc.robot.subsystems.drive.ModuleIOTalonFX;
-// importing own code
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
-/**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
- * subsystems, commands, and button mappings) should be declared here.
- */
 public class RobotContainer {
   // Subsystems
-  private final Drive drive;
-
-  private final Limelight limelight;
-
-  // with the talon library this is how we would instantiate a new Talon motor - Brenden
-  private final Shooter shooter = new Shooter(16, 15, 17, 18);
+  private final Drive drive = new Drive();
+  private final Limelight limelight = new Limelight();
+  private final Shooter shooter =
+      new Shooter(
+          Constants.FEED_MOTOR_ID,
+          Constants.FEED_MOVE_MOTOR_ID,
+          Constants.TRANSFER_MOTOR_ID,
+          Constants.LAUNCH_MOTOR_ID);
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
 
-  // Dashboard inputs
-  private final LoggedDashboardChooser<Command> autoChooser;
+  // Auto chooser
+  private final SendableChooser<Command> autoChooser = new SendableChooser<>();
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    switch (Constants.currentMode) {
-      case REAL:
-        // Real robot, instantiate hardware IO implementations
-        // ModuleIOTalonFX is intended for modules with TalonFX drive, TalonFX turn, and
-        // a CANcoder
-        drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                new ModuleIOTalonFX(TunerConstants.FrontRight),
-                new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight));
-
-        // The ModuleIOTalonFXS implementation provides an example implementation for
-        // TalonFXS controller connected to a CANdi with a PWM encoder. The
-        // implementations
-        // of ModuleIOTalonFX, ModuleIOTalonFXS, and ModuleIOSpark (from the Spark
-        // swerve
-        // template) can be freely intermixed to support alternative hardware
-        // arrangements.
-        // Please see the AdvantageKit template documentation for more information:
-        // https://docs.advantagekit.org/getting-started/template-projects/talonfx-swerve-template#custom-module-implementations
-        //
-        // drive =
-        // new Drive(
-        // new GyroIOPigeon2(),
-        // new ModuleIOTalonFXS(TunerConstants.FrontLeft),
-        // new ModuleIOTalonFXS(TunerConstants.FrontRight),
-        // new ModuleIOTalonFXS(TunerConstants.BackLeft),
-        // new ModuleIOTalonFXS(TunerConstants.BackRight));
-
-        // System.out.println("TalonFX initialized on CAN ID 15");
-        break;
-
-      case SIM:
-        // Sim robot, instantiate physics sim IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(TunerConstants.FrontLeft),
-                new ModuleIOSim(TunerConstants.FrontRight),
-                new ModuleIOSim(TunerConstants.BackLeft),
-                new ModuleIOSim(TunerConstants.BackRight));
-        break;
-
-      default:
-        // Replayed robot, disable IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {});
-        break;
-    }
-
-    limelight = new Limelight();
-
-    // init autochooser
-    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-    // simple auto: Shoot for 1 second, then drive backward for 2 seconds
+    // Set up auto chooser
     Command simpleAuto =
         Commands.sequence(
-            // 1. Spin up shooter and feed
-            // 2. Drive backward at 1 m/s
             Commands.runEnd(
-                    () -> drive.runVelocity(new ChassisSpeeds(1.5, 0.0, 0.39)), // -X is backward
-                    () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)), // Stop at end
+                    () -> drive.runVelocity(new ChassisSpeeds(1.5, 0.0, 0.39)),
+                    () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                     drive)
-                .withTimeout(2.0), // Run for 2 seconds
+                .withTimeout(2.0),
             Commands.runEnd(() -> shooter.runShooter(0.6), shooter::stop, shooter)
-                .withTimeout(1.0) // Run for 1 second
-            );
+                .withTimeout(1.0));
 
-    // Add to the chooser
-    autoChooser.addDefaultOption("Simple Shoot & Move", simpleAuto);
+    autoChooser.setDefaultOption("Simple Shoot & Move", simpleAuto);
+    SmartDashboard.putData("Auto Choices", autoChooser);
 
-    // Set up SysId routines
-    autoChooser.addOption(
-        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
-    autoChooser.addOption(
-        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
-    autoChooser.addOption(
-        "Drive SysId (Quasistatic Forward)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    autoChooser.addOption(
-        "Drive SysId (Quasistatic Reverse)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    autoChooser.addOption(
-        "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    autoChooser.addOption(
-        "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-
-    // Configure the button bindings
     configureButtonBindings();
   }
 
-  /**
-   * Use this method to define your button->command mappings. Buttons can be created by
-   * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
-   * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
-   */
   private void configureButtonBindings() {
-    // Default command, normal field-relative drive
+    // Default command: field-relative drive
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
@@ -164,7 +56,7 @@ public class RobotContainer {
             () -> -controller.getLeftX(),
             () -> -controller.getRightX()));
 
-    // Lock to 0° when A button is held
+    // Lock to 0 degrees when A button is held
     controller
         .a()
         .whileTrue(
@@ -174,12 +66,7 @@ public class RobotContainer {
                 () -> -controller.getLeftX(),
                 () -> Rotation2d.kZero));
 
-    // Switch to X pattern when X button is pressed
-    // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-
-    // --- SHOOTER BINDINGS ---
-
-    // Left Bumper: FeedMove Forward (Intaking direction?)
+    // Left Bumper: FeedMove Forward
     controller
         .leftBumper()
         .whileTrue(
@@ -194,7 +81,7 @@ public class RobotContainer {
                 () -> shooter.runFeedMove(0),
                 shooter));
 
-    // combined left and right trigger command
+    // Default shooter command: triggers + X button
     shooter.setDefaultCommand(
         Commands.run(
             () -> {
@@ -222,9 +109,7 @@ public class RobotContainer {
             },
             shooter));
 
-    // experimental run feed backwards
-
-    // Right Bumper: FeedMove Backward (Ejecting direction?)
+    // Right Bumper: FeedMove Backward
     controller
         .rightBumper()
         .whileTrue(
@@ -239,32 +124,18 @@ public class RobotContainer {
                 () -> shooter.runFeedMove(0),
                 shooter));
 
-    // experimental run feed backwards
+    // B button: Run feed backwards
     controller
         .b()
         .whileTrue(
             Commands.runEnd(() -> shooter.runFeed(-0.55), () -> shooter.runFeed(0), shooter));
 
-    // Right Trigger: Run Shooter (Launch + Transfer)
-    // Launch at 80%, Transfer at 60% (Adjust these values as needed)
+    // Right Trigger: Run shooter
     controller
         .rightTrigger()
         .whileTrue(Commands.runEnd(() -> shooter.runShooter(0.6), shooter::stop, shooter));
 
-    // --- SHOOTER BINDINGS ---
-
-    // Reset gyro to 0° when B button is pressed
-    // controller
-    //     .b()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //                 () ->
-    //                     drive.setPose(
-    //                         new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-    //                 drive)
-    //             .ignoringDisable(true));
-
-    // Hold Y to align to visible AprilTag using Limelight tx
+    // Y button: Align to AprilTag
     controller
         .y()
         .whileTrue(
@@ -272,12 +143,7 @@ public class RobotContainer {
                 drive, limelight, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
   }
 
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
   public Command getAutonomousCommand() {
-    return autoChooser.get();
+    return autoChooser.getSelected();
   }
 }

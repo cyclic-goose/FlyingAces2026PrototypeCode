@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs grep -l -i \"limelight\\\\|photon\")"
+      "Bash(xargs grep -l -i \"limelight\\\\|photon\")",
+      "Bash(./gradlew build)"
     ]
   }
 }

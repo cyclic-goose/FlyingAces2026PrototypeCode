@@ -2,8 +2,8 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import org.littletonrobotics.junction.Logger;
 
 public class Limelight extends SubsystemBase {
   private final NetworkTable table;
@@ -34,9 +34,9 @@ public class Limelight extends SubsystemBase {
 
   @Override
   public void periodic() {
-    Logger.recordOutput("Limelight/tx", getTx());
-    Logger.recordOutput("Limelight/ty", getTy());
-    Logger.recordOutput("Limelight/hasTarget", hasTarget());
-    Logger.recordOutput("Limelight/TagID", getTagID());
+    SmartDashboard.putNumber("Limelight/tx", getTx());
+    SmartDashboard.putNumber("Limelight/ty", getTy());
+    SmartDashboard.putBoolean("Limelight/hasTarget", hasTarget());
+    SmartDashboard.putNumber("Limelight/TagID", getTagID());
   }
 }
