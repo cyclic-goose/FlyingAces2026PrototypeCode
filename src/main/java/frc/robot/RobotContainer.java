@@ -51,8 +51,8 @@ public class RobotContainer {
                         drive)
                     .withTimeout(0.67),
 
-                // 2. Spin until limelight finds a tag, then align to it
-                DriveCommands.searchAndAlign(drive, limelight).withTimeout(5.0),
+                // 2. Center on closest visible tag
+                DriveCommands.centerOnTag(drive, limelight).withTimeout(5.0),
 
                 // 3. Rev launch motor for 1 second (let it spin up)
                 Commands.runEnd(() -> shooter.runShooter(0.85), () -> {}, shooter).withTimeout(1.0),
@@ -160,11 +160,11 @@ public class RobotContainer {
             },
             shooter));
 
-    // Y button: Search and align to goal AprilTag (with joystick driving)
+    // Y button: Center on closest visible AprilTag (with joystick driving)
     controller
         .y()
         .whileTrue(
-            DriveCommands.searchAndAlign(
+            DriveCommands.centerOnTag(
                 drive, limelight, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
   }
 

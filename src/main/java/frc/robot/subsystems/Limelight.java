@@ -9,8 +9,9 @@ import java.util.Set;
 public class Limelight extends SubsystemBase {
   private final NetworkTable table;
 
+  // 1 IS NOT A GOAL TAG
   private static final Set<Integer> GOAL_TAG_IDS =
-      Set.of(2, 3, 4, 5, 8, 9, 10, 11, 18, 19, 20, 21, 24, 25, 26, 27);
+      Set.of(1, 2, 3, 4, 5, 8, 9, 10, 11, 18, 19, 20, 21, 24, 25, 26, 27);
 
   public Limelight() {
     table = NetworkTableInstance.getDefault().getTable("limelight");

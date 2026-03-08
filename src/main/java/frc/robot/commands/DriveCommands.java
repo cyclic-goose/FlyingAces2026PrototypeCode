@@ -10,7 +10,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.Limelight;
@@ -165,15 +164,11 @@ public class DriveCommands {
         .beforeStarting(() -> angleController.reset(limelight.getTx()));
   }
 
-  private static final double SEARCH_ROTATE_SPEED = 1.5; // rad/s to spin while searching
-  private static final double TAG_LOST_GRACE_SECONDS = 0.5; // hold last tx this long before search
-
   /**
-   * Search for a goal tag by spinning, then PID-align to it. Supports joystick input for linear
-   * driving during teleop. Uses a grace period to hold alignment through brief detection dropouts
-   * at FOV edges. Ends when the alignment PID is within tolerance.
+   * Centers on the closest visible AprilTag using a PID on Limelight tx. While no tag is visible,
+   * rotation is zero (driver keeps full control). Supports joystick input for linear driving.
    */
-  public static Command searchAndAlign(
+  public static Command centerOnTag(
       Drive drive, Limelight limelight, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
     ProfiledPIDController angleController =
         new ProfiledPIDController(
@@ -184,35 +179,14 @@ public class DriveCommands {
     angleController.setGoal(0.0);
     angleController.setTolerance(1.0);
 
-    // Mutable state for grace period tracking
-    double[] lastTx = {0.0};
-    Timer lostTimer = new Timer();
-    boolean[] wasTracking = {false};
-
     return Commands.run(
             () -> {
               Translation2d linearVelocity =
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-              double omega;
-              if (limelight.hasGoalTarget()) {
-                // Goal tag visible — PID align and remember tx
-                lastTx[0] = limelight.getTx();
-                omega = -angleController.calculate(lastTx[0]);
-                lostTimer.reset();
-                lostTimer.start();
-                wasTracking[0] = true;
-              } else if (wasTracking[0] && lostTimer.get() < TAG_LOST_GRACE_SECONDS) {
-                // Tag just lost — hold alignment to last known tx during grace period
-                omega = -angleController.calculate(lastTx[0]);
-              } else {
-                // Grace period expired or never had a target — spin to search
-                if (wasTracking[0]) {
-                  // Only reset PID once on transition to search
-                  angleController.reset(0.0);
-                  wasTracking[0] = false;
-                }
-                omega = SEARCH_ROTATE_SPEED;
+              double omega = 0.0;
+              if (limelight.hasTarget()) {
+                omega = -angleController.calculate(limelight.getTx());
               }
 
               ChassisSpeeds speeds =
@@ -233,18 +207,11 @@ public class DriveCommands {
                           : drive.getRotation()));
             },
             drive)
-        .beforeStarting(
-            () -> {
-              angleController.reset(0.0);
-              lastTx[0] = 0.0;
-              wasTracking[0] = false;
-              lostTimer.reset();
-            })
-        .until(() -> limelight.hasGoalTarget() && angleController.atGoal());
+        .beforeStarting(() -> angleController.reset(limelight.getTx()));
   }
 
   /** No-joystick overload for autonomous use. */
-  public static Command searchAndAlign(Drive drive, Limelight limelight) {
-    return searchAndAlign(drive, limelight, () -> 0.0, () -> 0.0);
+  public static Command centerOnTag(Drive drive, Limelight limelight) {
+    return centerOnTag(drive, limelight, () -> 0.0, () -> 0.0);
   }
 }
