@@ -20,7 +20,8 @@ public class RobotContainer {
 
   // now separate intake and shooter
   private final Intake intake = new Intake(Constants.FEED_MOTOR_ID, Constants.FEED_MOVE_MOTOR_ID);
-  private final Shooter shooter = new Shooter(Constants.TRANSFER_MOTOR_ID, Constants.LAUNCH_MOTOR_ID);
+  private final Shooter shooter =
+      new Shooter(Constants.TRANSFER_MOTOR_ID, Constants.LAUNCH_MOTOR_ID);
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -40,7 +41,31 @@ public class RobotContainer {
             Commands.runEnd(() -> shooter.runShooter(0.6), shooter::stop, shooter)
                 .withTimeout(1.0));
 
+    // Auto: back up 1m, align to goal via limelight, rev then fire
+    Command alignAndShootAuto =
+        Commands.sequence(
+                // 1. Drive backwards ~1 meter (negative X = backwards)
+                Commands.runEnd(
+                        () -> drive.runVelocity(new ChassisSpeeds(-1.5, 0.0, 0.0)),
+                        () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+                        drive)
+                    .withTimeout(0.67),
+
+                // 2. Spin until limelight finds a tag, then align to it
+                DriveCommands.searchAndAlign(drive, limelight).withTimeout(5.0),
+
+                // 3. Rev launch motor for 1 second (let it spin up)
+                Commands.runEnd(() -> shooter.runShooter(0.85), () -> {}, shooter).withTimeout(1.0),
+
+                // 4. Fire: run launch + transfer together, feed ball into shooter
+                Commands.parallel(
+                        Commands.runEnd(() -> shooter.runShooter(0.85), shooter::stop, shooter),
+                        Commands.runEnd(() -> intake.runFeed(0.75), intake::stop, intake))
+                    .withTimeout(3.0))
+            .withTimeout(15.0); // leave margin within 20s auto period
+
     autoChooser.setDefaultOption("Simple Shoot & Move", simpleAuto);
+    autoChooser.addOption("Align & Shoot", alignAndShootAuto);
     SmartDashboard.putData("Auto Choices", autoChooser);
 
     configureButtonBindings();
@@ -56,7 +81,6 @@ public class RobotContainer {
             () -> -controller.getLeftX(),
             () -> -controller.getRightX()));
 
-
     // Lock to 0 degrees when A button is held
     controller
         .a()
@@ -66,7 +90,6 @@ public class RobotContainer {
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),
                 () -> Rotation2d.kZero));
-
 
     // Left Bumper: FeedMove Forward
     controller
@@ -83,7 +106,6 @@ public class RobotContainer {
                 () -> intake.runFeedMove(0),
                 intake));
 
-
     // Right Bumper: FeedMove Backward
     controller
         .rightBumper()
@@ -99,13 +121,10 @@ public class RobotContainer {
                 () -> intake.runFeedMove(0),
                 intake));
 
-
     // B button: Run feed backwards
     controller
         .b()
         .whileTrue(Commands.runEnd(() -> intake.runFeed(-0.55), () -> intake.runFeed(0), intake));
-
-
 
     // Default intake command: left trigger runs feed motor
     intake.setDefaultCommand(
@@ -119,7 +138,6 @@ public class RobotContainer {
               }
             },
             intake));
-
 
     // Default shooter command: right trigger runs launch, X runs transfer
     shooter.setDefaultCommand(
@@ -142,16 +160,14 @@ public class RobotContainer {
             },
             shooter));
 
-
-    // Y button: Align to AprilTag
+    // Y button: Search and align to goal AprilTag (with joystick driving)
     controller
         .y()
         .whileTrue(
-            DriveCommands.alignToTarget(
+            DriveCommands.searchAndAlign(
                 drive, limelight, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
   }
 
-  
   public Command getAutonomousCommand() {
     return autoChooser.getSelected();
   }

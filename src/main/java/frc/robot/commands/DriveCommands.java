@@ -139,7 +139,7 @@ public class DriveCommands {
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
               double omega = 0.0;
-              if (limelight.hasTarget()) {
+              if (limelight.hasGoalTarget()) {
                 omega = -angleController.calculate(limelight.getTx());
               }
 
@@ -162,5 +162,63 @@ public class DriveCommands {
             },
             drive)
         .beforeStarting(() -> angleController.reset(limelight.getTx()));
+  }
+
+  private static final double SEARCH_ROTATE_SPEED = 1.5; // rad/s to spin while searching
+
+  /**
+   * Search for a goal tag by spinning, then PID-align to it. Supports joystick input for linear
+   * driving during teleop. Ends when the alignment PID is within tolerance.
+   */
+  public static Command searchAndAlign(
+      Drive drive, Limelight limelight, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
+    ProfiledPIDController angleController =
+        new ProfiledPIDController(
+            ALIGN_KP,
+            0.0,
+            ALIGN_KD,
+            new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+    angleController.setGoal(0.0);
+    angleController.setTolerance(1.0);
+
+    return Commands.run(
+            () -> {
+              Translation2d linearVelocity =
+                  getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+
+              double omega;
+              if (limelight.hasGoalTarget()) {
+                // Goal tag visible — PID align
+                omega = -angleController.calculate(limelight.getTx());
+              } else {
+                // No goal tag — spin to search
+                angleController.reset(0.0);
+                omega = SEARCH_ROTATE_SPEED;
+              }
+
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(
+                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                      omega);
+
+              boolean isFlipped =
+                  !(DriverStation.getAlliance().isPresent()
+                      && DriverStation.getAlliance().get() == Alliance.Red);
+
+              drive.runVelocity(
+                  ChassisSpeeds.fromFieldRelativeSpeeds(
+                      speeds,
+                      isFlipped
+                          ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                          : drive.getRotation()));
+            },
+            drive)
+        .until(() -> limelight.hasGoalTarget() && angleController.atGoal());
+  }
+
+  /** No-joystick overload for autonomous use. */
+  public static Command searchAndAlign(Drive drive, Limelight limelight) {
+    return searchAndAlign(drive, limelight, () -> 0.0, () -> 0.0);
   }
 }
