@@ -177,7 +177,7 @@ public class DriveCommands {
             ALIGN_KD,
             new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
     angleController.setGoal(0.0);
-    angleController.setTolerance(1.0);
+    angleController.setTolerance(3.0);
 
     return Commands.run(
             () -> {
@@ -186,7 +186,7 @@ public class DriveCommands {
 
               double omega = 0.0;
               if (limelight.hasTarget()) {
-                omega = -angleController.calculate(limelight.getTx());
+                omega = angleController.calculate(limelight.getTx());
               }
 
               ChassisSpeeds speeds =
