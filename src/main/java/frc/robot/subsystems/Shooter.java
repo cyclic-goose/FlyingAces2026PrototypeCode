@@ -4,6 +4,7 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shooter extends SubsystemBase {
@@ -11,6 +12,9 @@ public class Shooter extends SubsystemBase {
   private final WPI_TalonSRX feedMoveMotor;
   private final TalonFX transferMotor;
   private final TalonFX launchMotor;
+
+  private final DigitalInput limitSwitchBack = new DigitalInput(1);
+  private final DigitalInput limitSwitchFront = new DigitalInput(0);
 
   public Shooter(int feedMotorID, int feedMoveMotorID, int transferMotorID, int launchMotorID) {
     // 1. Initialize Feed Motor (Phoenix 5)
@@ -43,6 +47,7 @@ public class Shooter extends SubsystemBase {
 
   /** Run the Feed Move motor (Bumpers) */
   public void runFeedMove(double speed) {
+
     feedMoveMotor.set(ControlMode.PercentOutput, speed);
   }
 
@@ -55,14 +60,28 @@ public class Shooter extends SubsystemBase {
    * * Run the Shooter mechanism (Right Trigger). Usually Launch is faster than Transfer to ensure
    * clean exit.
    */
-  public void runShooter(double launchSpeed, double transferSpeed) {
+  public void runShooter(double launchSpeed) {
     launchMotor.set(launchSpeed);
+    // transferMotor.set(transferSpeed); // disabled running transfer from right trigger
+  }
+
+  // method to separate transfer from shoot
+  public void runTransfer(double transferSpeed) {
     transferMotor.set(transferSpeed);
+  }
+  // Limit switch check commands
+  public boolean isFeedLimitBackPressed() {
+    return !limitSwitchBack.get();
+  }
+
+  public boolean isFeedLimitFrontPressed() {
+    return !limitSwitchFront.get();
   }
 
   /** Stop all motors */
   public void stop() {
-    feedMotor.set(ControlMode.PercentOutput, 0);
+    // commented out because binary on left trigger sets zero
+    // feedMotor.set(ControlMode.PercentOutput, 0);
     feedMoveMotor.set(ControlMode.PercentOutput, 0);
     transferMotor.stopMotor();
     launchMotor.stopMotor();

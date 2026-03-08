@@ -6,9 +6,7 @@
 // at the root directory of this project.
 
 package frc.robot;
-
 import com.pathplanner.lib.auto.AutoBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -118,15 +116,14 @@ public class RobotContainer {
     Command simpleAuto =
         Commands.sequence(
             // 1. Spin up shooter and feed
-            Commands.runEnd(() -> shooter.runShooter(0.6, 0.5), shooter::stop, shooter)
-                .withTimeout(1.0), // Run for 1 second
-
             // 2. Drive backward at 1 m/s
             Commands.runEnd(
-                    () -> drive.runVelocity(new ChassisSpeeds(-1.0, 0.0, 0.0)), // -X is backward
+                    () -> drive.runVelocity(new ChassisSpeeds(1.5, 0.0, 0.39)), // -X is backward
                     () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)), // Stop at end
                     drive)
-                .withTimeout(2.0) // Run for 2 seconds
+                .withTimeout(2.0), // Run for 2 seconds
+            Commands.runEnd(() -> shooter.runShooter(0.6), shooter::stop, shooter)
+                .withTimeout(1.0) // Run for 1 second
             );
 
     // Add to the chooser
@@ -178,7 +175,7 @@ public class RobotContainer {
                 () -> Rotation2d.kZero));
 
     // Switch to X pattern when X button is pressed
-    controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
     // --- SHOOTER BINDINGS ---
 
@@ -187,37 +184,85 @@ public class RobotContainer {
         .leftBumper()
         .whileTrue(
             Commands.runEnd(
-                () -> shooter.runFeedMove(-0.5), () -> shooter.runFeedMove(0), shooter));
+                () -> {
+                  if (!shooter.isFeedLimitFrontPressed()) {
+                    shooter.runFeedMove(-0.55);
+                  } else {
+                    shooter.runFeedMove(0);
+                  }
+                },
+                () -> shooter.runFeedMove(0),
+                shooter));
+
+    // combined left and right trigger command
+    shooter.setDefaultCommand(
+        Commands.run(
+            () -> {
+              double leftTrigger = controller.getLeftTriggerAxis();
+              double rightTrigger = controller.getRightTriggerAxis();
+              boolean isXPressed = controller.x().getAsBoolean();
+
+              if (leftTrigger > 0.1) {
+                shooter.runFeed(0.75);
+              } else {
+                shooter.runFeed(0);
+              }
+
+              if (rightTrigger > 0.1) {
+                shooter.runShooter(0.85);
+              } else {
+                shooter.runShooter(0);
+              }
+
+              if (isXPressed) {
+                shooter.runTransfer(-0.55);
+              } else {
+                shooter.runTransfer(0);
+              }
+            },
+            shooter));
+
+    // experimental run feed backwards
 
     // Right Bumper: FeedMove Backward (Ejecting direction?)
     controller
         .rightBumper()
         .whileTrue(
-            Commands.runEnd(() -> shooter.runFeedMove(0.5), () -> shooter.runFeedMove(0), shooter));
+            Commands.runEnd(
+                () -> {
+                  if (!shooter.isFeedLimitBackPressed()) {
+                    shooter.runFeedMove(0.75);
+                  } else {
+                    shooter.runFeedMove(0);
+                  }
+                },
+                () -> shooter.runFeedMove(0),
+                shooter));
 
-    // Left Trigger: Run Feed Motor
+    // experimental run feed backwards
     controller
-        .leftTrigger()
-        .whileTrue(Commands.runEnd(() -> shooter.runFeed(0.5), () -> shooter.runFeed(0), shooter));
+        .b()
+        .whileTrue(
+            Commands.runEnd(() -> shooter.runFeed(-0.55), () -> shooter.runFeed(0), shooter));
 
     // Right Trigger: Run Shooter (Launch + Transfer)
     // Launch at 80%, Transfer at 60% (Adjust these values as needed)
     controller
         .rightTrigger()
-        .whileTrue(Commands.runEnd(() -> shooter.runShooter(0.5, 0.4), shooter::stop, shooter));
+        .whileTrue(Commands.runEnd(() -> shooter.runShooter(0.6), shooter::stop, shooter));
 
     // --- SHOOTER BINDINGS ---
 
     // Reset gyro to 0° when B button is pressed
-    controller
-        .b()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                    drive)
-                .ignoringDisable(true));
+    // controller
+    //     .b()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //                 () ->
+    //                     drive.setPose(
+    //                         new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+    //                 drive)
+    //             .ignoringDisable(true));
 
     // Hold Y to align to visible AprilTag using Limelight tx
     controller
