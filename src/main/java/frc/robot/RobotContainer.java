@@ -215,13 +215,11 @@ public class RobotContainer {
                 shooter.runShooter(0);
               }
 
-              if (isXPressed)
-              {
+              if (isXPressed) {
                 shooter.runTransfer(-0.55);
               } else {
                 shooter.runTransfer(0);
               }
-
             },
             shooter));
 
