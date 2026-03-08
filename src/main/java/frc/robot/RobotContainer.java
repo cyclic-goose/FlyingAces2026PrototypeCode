@@ -201,6 +201,7 @@ public class RobotContainer {
             () -> {
               double leftTrigger = controller.getLeftTriggerAxis();
               double rightTrigger = controller.getRightTriggerAxis();
+              
 
               if (leftTrigger > 0.1) {
                 shooter.runFeed(0.75);
@@ -209,19 +210,23 @@ public class RobotContainer {
               }
 
               if (rightTrigger > 0.1) {
-                shooter.runShooter(0.65);
+                shooter.runShooter(0.75);
               } else {
                 shooter.runShooter(0);
               }
+
+              
+
+              controller
+                  .x()
+                  .whileTrue(
+                      Commands.runEnd(
+                          () -> shooter.runTransfer(-0.55), () -> shooter.runTransfer(0), shooter));
             },
             shooter));
 
     // experimental run feed backwards
-    controller
-        .x()
-        .whileTrue(
-            Commands.runEnd(
-                () -> shooter.runTransfer(-0.55), () -> shooter.runTransfer(0), shooter));
+
     // Right Bumper: FeedMove Backward (Ejecting direction?)
     controller
         .rightBumper()
