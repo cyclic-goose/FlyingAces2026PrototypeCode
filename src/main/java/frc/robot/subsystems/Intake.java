@@ -6,19 +6,29 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends SubsystemBase {
-  private final WPI_TalonSRX feedMotor;
+  private final WPI_TalonSRX feedMotor1;
+  private final WPI_TalonSRX feedMotor2;
   private final WPI_TalonSRX feedMoveMotor;
 
   private final DigitalInput limitSwitchBack = new DigitalInput(1);
   private final DigitalInput limitSwitchFront = new DigitalInput(0);
 
-  public Intake(int feedMotorID, int feedMoveMotorID) {
-    feedMotor = new WPI_TalonSRX(feedMotorID);
-    feedMotor.configFactoryDefault();
-    feedMotor.setInverted(false);
-    feedMotor.configVoltageCompSaturation(12.0);
-    feedMotor.enableVoltageCompensation(true);
+  public Intake(int feedMotor1ID, int feedMotor2ID, int feedMoveMotorID) {
+    // configure feed motor 1
+    feedMotor1 = new WPI_TalonSRX(feedMotor1ID);
+    feedMotor1.configFactoryDefault();
+    feedMotor1.setInverted(false);
+    feedMotor1.configVoltageCompSaturation(12.0);
+    feedMotor1.enableVoltageCompensation(true);
 
+    // configure feed motor 2
+    feedMotor2 = new WPI_TalonSRX(feedMotor2ID);
+    feedMotor2.configFactoryDefault();
+    feedMotor2.setInverted(false);
+    feedMotor2.configVoltageCompSaturation(12.0);
+    feedMotor2.enableVoltageCompensation(true);
+
+    // configure talon srx for feed movement motor
     feedMoveMotor = new WPI_TalonSRX(feedMoveMotorID);
     feedMoveMotor.configFactoryDefault();
     feedMoveMotor.setInverted(false);
@@ -31,7 +41,9 @@ public class Intake extends SubsystemBase {
   }
 
   public void runFeed(double speed) {
-    feedMotor.set(ControlMode.PercentOutput, speed);
+    // run both feed motors
+    feedMotor1.set(ControlMode.PercentOutput, speed);
+    feedMotor2.set(ControlMode.PercentOutput, speed);
   }
 
   public boolean isFeedLimitBackPressed() {
@@ -43,7 +55,8 @@ public class Intake extends SubsystemBase {
   }
 
   public void stop() {
-    feedMotor.set(ControlMode.PercentOutput, 0);
+    feedMotor1.set(ControlMode.PercentOutput, 0);
+    feedMotor2.set(ControlMode.PercentOutput, 0);
     feedMoveMotor.set(ControlMode.PercentOutput, 0);
   }
 }
