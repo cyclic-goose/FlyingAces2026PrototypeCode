@@ -131,8 +131,8 @@ public class RobotContainer {
         Commands.run(
             () -> {
               double leftTrigger = controller.getLeftTriggerAxis();
-              if (leftTrigger > 0.1) {
-                intake.runFeed(0.75);
+              if (leftTrigger > 0.1 && !intake.isFeedLimitBackPressed()) {
+                intake.runFeed(0.95);
               } else {
                 intake.runFeed(0);
               }
@@ -140,25 +140,25 @@ public class RobotContainer {
             intake));
 
     // Default shooter command: right trigger runs launch, X runs transfer
-    shooter.setDefaultCommand(
-        Commands.run(
-            () -> {
-              double rightTrigger = controller.getRightTriggerAxis();
-              boolean isXPressed = controller.x().getAsBoolean();
+    /*shooter.setDefaultCommand(
+    Commands.run(
+        () -> {
+          double rightTrigger = controller.getRightTriggerAxis();
+          boolean isXPressed = controller.x().getAsBoolean();
 
-              if (rightTrigger > 0.1) {
-                shooter.runShooter(0.85);
-              } else {
-                shooter.runShooter(0);
-              }
+          if (rightTrigger > 0.1) {
+            shooter.runShooter(0.85);
+          } else {
+            shooter.runShooter(0);
+          }
 
-              if (isXPressed) {
-                shooter.runTransfer(-0.55);
-              } else {
-                shooter.runTransfer(0);
-              }
-            },
-            shooter));
+          if (isXPressed) {
+            shooter.runTransfer(-0.55);
+          } else {
+            shooter.runTransfer(0);
+          }
+        },
+        shooter));*/
 
     // Y button: Center on closest visible AprilTag (with joystick driving)
     controller
