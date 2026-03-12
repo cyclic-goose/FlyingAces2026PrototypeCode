@@ -1,38 +1,14 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shooter extends SubsystemBase {
-  private final WPI_TalonSRX feedMotor;
-  private final WPI_TalonSRX feedMoveMotor;
   private final TalonFX transferMotor;
   private final TalonFX launchMotor;
 
-  private final DigitalInput limitSwitchBack = new DigitalInput(1);
-  private final DigitalInput limitSwitchFront = new DigitalInput(0);
-
-  public Shooter(int feedMotorID, int feedMoveMotorID, int transferMotorID, int launchMotorID) {
-    // 1. Initialize Feed Motor (Phoenix 5)
-    feedMotor = new WPI_TalonSRX(feedMotorID);
-    feedMotor.configFactoryDefault();
-    feedMotor.setInverted(false);
-    feedMotor.configVoltageCompSaturation(12.0);
-    feedMotor.enableVoltageCompensation(true);
-
-    // 2. Initialize Feed Move Motor (Phoenix 5)
-    // This was missing in your original code
-    feedMoveMotor = new WPI_TalonSRX(feedMoveMotorID);
-    feedMoveMotor.configFactoryDefault();
-    feedMoveMotor.setInverted(false); // Adjust if it goes the wrong way
-    feedMoveMotor.configVoltageCompSaturation(12.0);
-    feedMoveMotor.enableVoltageCompensation(true);
-
-    // 3. Initialize Transfer and Launch Motors (Phoenix 6)
+  public Shooter(int transferMotorID, int launchMotorID) {
     TalonFXConfiguration config = new TalonFXConfiguration();
     config.Slot0.kP = 0.1;
     config.Slot0.kI = 0.0;
@@ -45,44 +21,15 @@ public class Shooter extends SubsystemBase {
     launchMotor.getConfigurator().apply(config);
   }
 
-  /** Run the Feed Move motor (Bumpers) */
-  public void runFeedMove(double speed) {
-
-    feedMoveMotor.set(ControlMode.PercentOutput, speed);
-  }
-
-  /** Run the Feed/Intake motor (Left Trigger) */
-  public void runFeed(double speed) {
-    feedMotor.set(ControlMode.PercentOutput, speed);
-  }
-
-  /**
-   * * Run the Shooter mechanism (Right Trigger). Usually Launch is faster than Transfer to ensure
-   * clean exit.
-   */
   public void runShooter(double launchSpeed) {
     launchMotor.set(launchSpeed);
-    // transferMotor.set(transferSpeed); // disabled running transfer from right trigger
   }
 
-  // method to separate transfer from shoot
   public void runTransfer(double transferSpeed) {
     transferMotor.set(transferSpeed);
   }
-  // Limit switch check commands
-  public boolean isFeedLimitBackPressed() {
-    return !limitSwitchBack.get();
-  }
 
-  public boolean isFeedLimitFrontPressed() {
-    return !limitSwitchFront.get();
-  }
-
-  /** Stop all motors */
   public void stop() {
-    // commented out because binary on left trigger sets zero
-    // feedMotor.set(ControlMode.PercentOutput, 0);
-    feedMoveMotor.set(ControlMode.PercentOutput, 0);
     transferMotor.stopMotor();
     launchMotor.stopMotor();
   }
