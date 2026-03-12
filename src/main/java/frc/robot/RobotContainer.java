@@ -114,10 +114,10 @@ public class RobotContainer {
 
               // right trigger runs feed motors forward if back limit switch is not pressed
               if (rightTrigger > 0.1 && !intake.isFeedLimitBackPressed()) {
-                intake.runFeed(0.65);
+                intake.runFeed(0.55);
                 // left trigger runs feed motors backward
               } else if (leftTrigger > 0.1 && !intake.isFeedLimitBackPressed()) {
-                intake.runFeed(-0.65);
+                intake.runFeed(-0.55);
                 // stop feed motors if no trigger is pressed
               } else {
                 intake.runFeed(0);
