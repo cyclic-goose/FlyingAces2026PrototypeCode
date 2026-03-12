@@ -19,7 +19,7 @@ public class RobotContainer {
   private final Limelight limelight = new Limelight();
 
   // now separate intake and shooter
-  private final Intake intake = new Intake(Constants.FEED_MOTOR_ID, Constants.FEED_MOVE_MOTOR_ID);
+  private final Intake intake = new Intake(Constants.FEED_MOTOR1_ID, Constants.FEED_MOTOR2_ID, Constants.FEED_MOVE_MOTOR_ID);
   private final Shooter shooter =
       new Shooter(Constants.TRANSFER_MOTOR_ID, Constants.LAUNCH_MOTOR_ID);
 
@@ -130,9 +130,9 @@ public class RobotContainer {
     intake.setDefaultCommand(
         Commands.run(
             () -> {
-              double leftTrigger = controller.getLeftTriggerAxis();
-              if (leftTrigger > 0.1 && !intake.isFeedLimitBackPressed()) {
-                intake.runFeed(0.95);
+              double rightTrigger = controller.getRightTriggerAxis();
+              if (rightTrigger > 0.1 && !intake.isFeedLimitBackPressed()) {
+                intake.runFeed(0.55);
               } else {
                 intake.runFeed(0);
               }
