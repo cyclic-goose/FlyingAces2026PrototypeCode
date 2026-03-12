@@ -99,10 +99,10 @@ public class RobotContainer {
 
               // left bumper moves intake forward if front limit switch is not pressed
               if (leftBumper && !intake.isFeedLimitFrontPressed()) {
-                intake.runFeedMove(-0.60);
+                intake.runFeedMove(-0.90);
                 // right bumper moves intake backward if back limit switch is not pressed
               } else if (rightBumper && !intake.isFeedLimitBackPressed()) {
-                intake.runFeedMove(0.90);
+                intake.runFeedMove(0.95);
                 // stop feed move motor if no bumper is pressed
               } else {
                 intake.runFeedMove(0);
