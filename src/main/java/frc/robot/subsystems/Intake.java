@@ -13,7 +13,7 @@ public class Intake extends SubsystemBase {
   private final DigitalInput limitSwitchBack = new DigitalInput(1);
   private final DigitalInput limitSwitchFront = new DigitalInput(0);
 
-  public Intake(int feedMotor1ID,int feedMotor2ID, int feedMoveMotorID) {
+  public Intake(int feedMotor1ID, int feedMotor2ID, int feedMoveMotorID) {
     // configure feed motor 1
     feedMotor1 = new WPI_TalonSRX(feedMotor1ID);
     feedMotor1.configFactoryDefault();
@@ -27,7 +27,6 @@ public class Intake extends SubsystemBase {
     feedMotor2.setInverted(false);
     feedMotor2.configVoltageCompSaturation(12.0);
     feedMotor2.enableVoltageCompensation(true);
-
 
     // configure talon srx for feed movement motor
     feedMoveMotor = new WPI_TalonSRX(feedMoveMotorID);
