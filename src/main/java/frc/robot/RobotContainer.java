@@ -32,14 +32,11 @@ public class RobotContainer {
   public RobotContainer() {
     // Set up auto chooser
     Command simpleAuto =
-        Commands.sequence(
-            Commands.runEnd(
-                    () -> drive.runVelocity(new ChassisSpeeds(1.5, 0.0, 0.39)),
-                    () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
-                    drive)
-                .withTimeout(2.0),
-            Commands.runEnd(() -> shooter.runShooter(0.6), shooter::stop, shooter)
-                .withTimeout(1.0));
+        Commands.runEnd(
+                () -> drive.runVelocity(new ChassisSpeeds(-1.5, 0.0, 0.0)),
+                () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+                drive)
+            .withTimeout(1.5);
 
     // Auto: back up 1m, align to goal via limelight, rev then fire
     Command alignAndShootAuto =
@@ -91,48 +88,36 @@ public class RobotContainer {
                 () -> -controller.getLeftX(),
                 () -> Rotation2d.kZero));
 
-    // Left Bumper: FeedMove Forward
-    controller
-        .leftBumper()
-        .whileTrue(
-            Commands.runEnd(
-                () -> {
-                  if (!intake.isFeedLimitFrontPressed()) {
-                    intake.runFeedMove(-0.55);
-                  } else {
-                    intake.runFeedMove(0);
-                  }
-                },
-                () -> intake.runFeedMove(0),
-                intake));
-
-    // Right Bumper: FeedMove Backward
-    controller
-        .rightBumper()
-        .whileTrue(
-            Commands.runEnd(
-                () -> {
-                  if (!intake.isFeedLimitBackPressed()) {
-                    intake.runFeedMove(0.75);
-                  } else {
-                    intake.runFeedMove(0);
-                  }
-                },
-                () -> intake.runFeedMove(0),
-                intake));
-
-    // B button: Run feed backwards
-    controller
-        .b()
-        .whileTrue(Commands.runEnd(() -> intake.runFeed(-0.55), () -> intake.runFeed(0), intake));
-
-    // Default intake command: left trigger runs feed motor
+    // default intake command: handles feed move (bumpers) and feed motors (triggers) together
     intake.setDefaultCommand(
         Commands.run(
             () -> {
+              // get bumper states
+              boolean leftBumper = controller.getHID().getRawButton(5);
+              boolean rightBumper = controller.getHID().getRawButton(6);
+
+              // left bumper moves intake forward if front limit switch is not pressed
+              if (leftBumper && !intake.isFeedLimitFrontPressed()) {
+                intake.runFeedMove(-0.55);
+              // right bumper moves intake backward if back limit switch is not pressed
+              } else if (rightBumper && !intake.isFeedLimitBackPressed()) {
+                intake.runFeedMove(0.75);
+              // stop feed move motor if no bumper is pressed
+              } else {
+                intake.runFeedMove(0);
+              }
+
+              // get trigger values
               double rightTrigger = controller.getRightTriggerAxis();
+              double leftTrigger = controller.getLeftTriggerAxis();
+
+              // right trigger runs feed motors forward if back limit switch is not pressed
               if (rightTrigger > 0.1 && !intake.isFeedLimitBackPressed()) {
                 intake.runFeed(0.55);
+              // left trigger runs feed motors backward
+              } else if (leftTrigger > 0.1) {
+                intake.runFeed(-0.55);
+              // stop feed motors if no trigger is pressed
               } else {
                 intake.runFeed(0);
               }
