@@ -10,4 +10,5 @@ public final class Constants {
   public static final int LAUNCH_MOTOR_ID = 18;
 
   public static final double autoRotateMagnitudeRadians = 3.0 * 0.78;
+  public static final double autoForwardSpeed = 3.8; // "m/s"
 }
