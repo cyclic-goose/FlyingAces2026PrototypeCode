@@ -48,7 +48,9 @@ public class RobotContainer {
         Commands.sequence(
                 // move forward
                 Commands.runEnd(
-                        () -> drive.runVelocity(new ChassisSpeeds(Constants.autoForwardSpeed, 0.0, 0.0)),
+                        () ->
+                            drive.runVelocity(
+                                new ChassisSpeeds(Constants.autoForwardSpeed, 0.0, 0.0)),
                         () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                         drive)
                     .withTimeout(3.6),
@@ -79,7 +81,9 @@ public class RobotContainer {
         Commands.sequence(
                 // move forward
                 Commands.runEnd(
-                        () -> drive.runVelocity(new ChassisSpeeds(Constants.autoForwardSpeed, 0.0, 0.0)),
+                        () ->
+                            drive.runVelocity(
+                                new ChassisSpeeds(Constants.autoForwardSpeed, 0.0, 0.0)),
                         () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                         drive)
                     .withTimeout(3.6),
@@ -116,7 +120,9 @@ public class RobotContainer {
                     .withTimeout(2.2),
                 // move forward
                 Commands.runEnd(
-                        () -> drive.runVelocity(new ChassisSpeeds(Constants.autoForwardSpeed, 0.0, 0.0)),
+                        () ->
+                            drive.runVelocity(
+                                new ChassisSpeeds(Constants.autoForwardSpeed, 0.0, 0.0)),
                         () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                         drive)
                     .withTimeout(3.6),
@@ -153,7 +159,9 @@ public class RobotContainer {
                     .withTimeout(1.85),
                 // move forward
                 Commands.runEnd(
-                        () -> drive.runVelocity(new ChassisSpeeds(Constants.autoForwardSpeed, 0.0, 0.0)),
+                        () ->
+                            drive.runVelocity(
+                                new ChassisSpeeds(Constants.autoForwardSpeed, 0.0, 0.0)),
                         () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                         drive)
                     .withTimeout(3.6),
