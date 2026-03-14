@@ -2,6 +2,8 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -30,6 +32,9 @@ public class RobotContainer {
   // Auto chooser
   private final SendableChooser<Command> autoChooser = new SendableChooser<>();
 
+  private final double initRotateAmount =
+      DriverStation.getAlliance().get() == Alliance.Blue ? (6 * 0.78) : (0.0);
+
   public RobotContainer() {
     // Set up auto chooser
     Command simpleAuto =
@@ -39,31 +44,172 @@ public class RobotContainer {
                 drive)
             .withTimeout(1.5);
 
-    // Auto: back up 1m, align to goal via limelight, rev then fire
-    Command alignAndShootAuto =
+    Command intakeAutoTurnRight =
         Commands.sequence(
-                // 1. Drive backwards ~1 meter (negative X = backwards)
+                // move forward
                 Commands.runEnd(
-                        () -> drive.runVelocity(new ChassisSpeeds(-1.5, 0.0, 0.0)),
+                        () -> drive.runVelocity(new ChassisSpeeds(3.6, 0.0, 0.0)),
                         () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                         drive)
-                    .withTimeout(0.67),
-
-                // 2. Center on closest visible tag
-                DriveCommands.centerOnTag(drive, limelight).withTimeout(5.0),
-
-                // 3. Rev launch motor for 1 second (let it spin up)
-                Commands.runEnd(() -> shooter.runShooter(0.85), () -> {}, shooter).withTimeout(1.0),
-
-                // 4. Fire: run launch + transfer together, feed ball into shooter
+                    .withTimeout(3.6),
+                // rotate
+                Commands.runEnd(
+                        () ->
+                            drive.runVelocity(
+                                new ChassisSpeeds(0, 0.0, -Constants.autoRotateMagnitudeRadians)),
+                        () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+                        drive)
+                    .withTimeout(2.2),
+                // deploy feed
+                Commands.runEnd(() -> intake.runFeedMove(-0.85), () -> {}, shooter)
+                    .withTimeout(1.5),
+                // intake
                 Commands.parallel(
-                        Commands.runEnd(() -> shooter.runShooter(0.85), shooter::stop, shooter),
-                        Commands.runEnd(() -> intake.runFeed(0.75), intake::stop, intake))
-                    .withTimeout(3.0))
-            .withTimeout(15.0); // leave margin within 20s auto period
+                        // move while scooping
+                        Commands.runEnd(
+                            () -> drive.runVelocity(new ChassisSpeeds(1.5, 0, 0.0)),
+                            () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+                            drive),
+                        Commands.runEnd(() -> intake.runFeed(0.7), intake::stop, intake))
+                    .withTimeout(4.0))
+            .withTimeout(20); // timeout for entire auto
 
-    autoChooser.setDefaultOption("Simple Shoot & Move", simpleAuto);
-    autoChooser.addOption("Align & Shoot", alignAndShootAuto);
+    // opposite direction auto
+    Command intakeAutoTurnLeft =
+        Commands.sequence(
+                // move forward
+                Commands.runEnd(
+                        () -> drive.runVelocity(new ChassisSpeeds(3.6, 0.0, 0.0)),
+                        () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+                        drive)
+                    .withTimeout(3.6),
+                // rotate
+                Commands.runEnd(
+                        () ->
+                            drive.runVelocity(
+                                new ChassisSpeeds(0, 0.0, Constants.autoRotateMagnitudeRadians)),
+                        () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+                        drive)
+                    .withTimeout(2.2),
+                // deploy feed
+                Commands.runEnd(() -> intake.runFeedMove(-0.85), () -> {}, shooter)
+                    .withTimeout(1.5),
+                // intake
+                Commands.parallel(
+                        // move while scooping
+                        Commands.runEnd(
+                            () -> drive.runVelocity(new ChassisSpeeds(1.5, 0, 0.0)),
+                            () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+                            drive),
+                        Commands.runEnd(() -> intake.runFeed(0.85), intake::stop, intake))
+                    .withTimeout(4.0))
+            .withTimeout(20); // timeout for entire auto
+
+    Command intakeAutoTurnRightBlue =
+        Commands.sequence(
+
+                // rotate 180 first
+                Commands.runEnd(
+                        () -> drive.runVelocity(new ChassisSpeeds(0, 0.0, -initRotateAmount)),
+                        () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+                        drive)
+                    .withTimeout(2.2),
+                // move forward
+                Commands.runEnd(
+                        () -> drive.runVelocity(new ChassisSpeeds(3.6, 0.0, 0.0)),
+                        () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+                        drive)
+                    .withTimeout(3.6),
+                // rotate
+                Commands.runEnd(
+                        () ->
+                            drive.runVelocity(
+                                new ChassisSpeeds(0, 0.0, Constants.autoRotateMagnitudeRadians)),
+                        () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+                        drive)
+                    .withTimeout(2.2),
+                // deploy feed
+                Commands.runEnd(() -> intake.runFeedMove(-0.85), () -> {}, shooter)
+                    .withTimeout(1.5),
+                // intake
+                Commands.parallel(
+                        // move while scooping
+                        Commands.runEnd(
+                            () -> drive.runVelocity(new ChassisSpeeds(1.5, 0, 0.0)),
+                            () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+                            drive),
+                        Commands.runEnd(() -> intake.runFeed(0.85), intake::stop, intake))
+                    .withTimeout(4.0))
+            .withTimeout(25); // timeout for entire auto
+
+    Command intakeAutoTurnLeftBlue =
+        Commands.sequence(
+
+                // rotate 180 first
+                Commands.runEnd(
+                        () -> drive.runVelocity(new ChassisSpeeds(0, 0.0, initRotateAmount)),
+                        () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+                        drive)
+                    .withTimeout(2.2),
+                // move forward
+                Commands.runEnd(
+                        () -> drive.runVelocity(new ChassisSpeeds(3.6, 0.0, 0.0)),
+                        () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+                        drive)
+                    .withTimeout(3.6),
+                // rotate
+                Commands.runEnd(
+                        () ->
+                            drive.runVelocity(
+                                new ChassisSpeeds(0, 0.0, Constants.autoRotateMagnitudeRadians)),
+                        () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+                        drive)
+                    .withTimeout(2.2),
+                // deploy feed
+                Commands.runEnd(() -> intake.runFeedMove(-0.85), () -> {}, shooter)
+                    .withTimeout(1.5),
+                // intake
+                Commands.parallel(
+                        // move while scooping
+                        Commands.runEnd(
+                            () -> drive.runVelocity(new ChassisSpeeds(1.5, 0, 0.0)),
+                            () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+                            drive),
+                        Commands.runEnd(() -> intake.runFeed(0.85), intake::stop, intake))
+                    .withTimeout(4.0))
+            .withTimeout(25); // timeout for entire auto
+
+    // Auto: back up 1m, align to goal via limelight, rev then fire
+    // Command alignAndShootAuto =
+    //     Commands.sequence(
+    //             // 1. Drive backwards ~1 meter (negative X = backwards)
+    //             Commands.runEnd(
+    //                     () -> drive.runVelocity(new ChassisSpeeds(-1.5, 0.0, 0.0)),
+    //                     () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
+    //                     drive)
+    //                 .withTimeout(0.67),
+
+    //             // 2. Center on closest visible tag
+    //             DriveCommands.centerOnTag(drive, limelight).withTimeout(5.0),
+
+    //             // 3. Rev launch motor for 1 second (let it spin up)
+    //             Commands.runEnd(() -> shooter.runShooter(0.85), () -> {},
+    // shooter).withTimeout(1.0),
+
+    //             // 4. Fire: run launch + transfer together, feed ball into shooter
+    //             Commands.parallel(
+    //                     Commands.runEnd(() -> shooter.runShooter(0.85), shooter::stop, shooter),
+    //                     Commands.runEnd(() -> intake.runFeed(0.75), intake::stop, intake))
+    //                 .withTimeout(3.0))
+    //         .withTimeout(15.0); // leave margin within 20s auto period
+
+    autoChooser.setDefaultOption("Simple Move", simpleAuto);
+    autoChooser.addOption("Turn Right Red", intakeAutoTurnRight); // add intake auto to shuffleboard
+    autoChooser.addOption("Turn Left Red", intakeAutoTurnLeft);
+    autoChooser.addOption("Turn Right Blue", intakeAutoTurnRightBlue);
+    autoChooser.addOption("Turn Left Blue", intakeAutoTurnLeftBlue);
+    // autoChooser.addOption("Align & Shoot", alignAndShootAuto);
+
     SmartDashboard.putData("Auto Choices", autoChooser);
 
     configureButtonBindings();
