@@ -113,7 +113,7 @@ public class RobotContainer {
                         () -> drive.runVelocity(new ChassisSpeeds(0, 0.0, -initRotateAmount)),
                         () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                         drive)
-                    .withTimeout(2.2),
+                    .withTimeout(2),
                 // move forward
                 Commands.runEnd(
                         () -> drive.runVelocity(new ChassisSpeeds(3.6, 0.0, 0.0)),
@@ -127,7 +127,7 @@ public class RobotContainer {
                                 new ChassisSpeeds(0, 0.0, Constants.autoRotateMagnitudeRadians)),
                         () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                         drive)
-                    .withTimeout(2.2),
+                    .withTimeout(2),
                 // deploy feed
                 Commands.runEnd(() -> intake.runFeedMove(-0.85), () -> {}, shooter)
                     .withTimeout(1.5),
