@@ -13,5 +13,5 @@ public final class Constants {
   public static final double autoForwardSpeed = 3.8; // "m/s"
   public static final double autoForwardTime = 3.4; // total seconds
 
-  public static final boolean lockIntake = false;
+  public static boolean lockIntake = false;
 }

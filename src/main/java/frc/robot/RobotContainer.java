@@ -246,10 +246,28 @@ public class RobotContainer {
                 () -> -controller.getLeftX(),
                 () -> Rotation2d.kZero));
 
+    // B button toggles intake lock
+    controller
+        .b()
+        .onTrue(Commands.runOnce(() -> Constants.lockIntake = !Constants.lockIntake));
+
     // default intake command: handles feed move (bumpers) and feed motors (triggers) together
     intake.setDefaultCommand(
         Commands.run(
             () -> {
+              // when intake is locked, retract to back position and disable all controls
+              if (Constants.lockIntake) {
+                // retract intake until back limit switch is pressed
+                if (!intake.isFeedLimitBackPressed()) {
+                  intake.runFeedMove(0.95);
+                } else {
+                  intake.runFeedMove(0);
+                }
+                // disable feed motors
+                intake.runFeed(0);
+                return;
+              }
+
               // get bumper states
               boolean leftBumper = controller.getHID().getRawButton(5);
               boolean rightBumper = controller.getHID().getRawButton(6);
