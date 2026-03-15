@@ -53,7 +53,7 @@ public class RobotContainer {
                                 new ChassisSpeeds(Constants.autoForwardSpeed, 0.0, 0.0)),
                         () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                         drive)
-                    .withTimeout(3.6),
+                    .withTimeout(Constants.autoForwardTime),
                 // rotate
                 Commands.runEnd(
                         () ->
@@ -86,7 +86,7 @@ public class RobotContainer {
                                 new ChassisSpeeds(Constants.autoForwardSpeed, 0.0, 0.0)),
                         () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                         drive)
-                    .withTimeout(3.6),
+                    .withTimeout(Constants.autoForwardTime),
                 // rotate
                 Commands.runEnd(
                         () ->
@@ -125,7 +125,7 @@ public class RobotContainer {
                                 new ChassisSpeeds(Constants.autoForwardSpeed, 0.0, 0.0)),
                         () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                         drive)
-                    .withTimeout(3.6),
+                    .withTimeout(Constants.autoForwardTime),
                 // rotate
                 Commands.runEnd(
                         () ->
@@ -164,7 +164,7 @@ public class RobotContainer {
                                 new ChassisSpeeds(Constants.autoForwardSpeed, 0.0, 0.0)),
                         () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                         drive)
-                    .withTimeout(3.6),
+                    .withTimeout(Constants.autoForwardTime),
                 // rotate
                 Commands.runEnd(
                         () ->
