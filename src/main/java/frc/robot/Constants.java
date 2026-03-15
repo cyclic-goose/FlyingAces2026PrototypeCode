@@ -14,7 +14,7 @@ public final class Constants {
   public static final double autoForwardTime = 3.5; // total seconds
 
   // for feeding section of auto
-  public static final double autoFeedingForwardSpeed = 2.0; // in meters per second 
+  public static final double autoFeedingForwardSpeed = 2.0; // in meters per second
   public static final double autoFeedingForwardTime = 2.0; // in seconds
 
   public static boolean lockIntake = false;

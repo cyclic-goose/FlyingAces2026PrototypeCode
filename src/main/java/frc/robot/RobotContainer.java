@@ -70,7 +70,9 @@ public class RobotContainer {
                 Commands.parallel(
                         // move while scooping
                         Commands.runEnd(
-                            () -> drive.runVelocity(new ChassisSpeeds(Constants.autoFeedingForwardSpeed, 0, 0.0)),
+                            () ->
+                                drive.runVelocity(
+                                    new ChassisSpeeds(Constants.autoFeedingForwardSpeed, 0, 0.0)),
                             () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                             drive),
                         Commands.runEnd(() -> intake.runFeed(0.7), intake::stop, intake))
@@ -103,7 +105,9 @@ public class RobotContainer {
                 Commands.parallel(
                         // move while scooping
                         Commands.runEnd(
-                            () -> drive.runVelocity(new ChassisSpeeds(Constants.autoFeedingForwardSpeed, 0, 0.0)),
+                            () ->
+                                drive.runVelocity(
+                                    new ChassisSpeeds(Constants.autoFeedingForwardSpeed, 0, 0.0)),
                             () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                             drive),
                         Commands.runEnd(() -> intake.runFeed(0.85), intake::stop, intake))
@@ -142,7 +146,9 @@ public class RobotContainer {
                 Commands.parallel(
                         // move while scooping
                         Commands.runEnd(
-                            () -> drive.runVelocity(new ChassisSpeeds(Constants.autoFeedingForwardSpeed, 0, 0.0)),
+                            () ->
+                                drive.runVelocity(
+                                    new ChassisSpeeds(Constants.autoFeedingForwardSpeed, 0, 0.0)),
                             () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                             drive),
                         Commands.runEnd(() -> intake.runFeed(0.85), intake::stop, intake))
@@ -181,7 +187,9 @@ public class RobotContainer {
                 Commands.parallel(
                         // move while scooping
                         Commands.runEnd(
-                            () -> drive.runVelocity(new ChassisSpeeds(Constants.autoFeedingForwardSpeed, 0, 0.0)),
+                            () ->
+                                drive.runVelocity(
+                                    new ChassisSpeeds(Constants.autoFeedingForwardSpeed, 0, 0.0)),
                             () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                             drive),
                         Commands.runEnd(() -> intake.runFeed(0.85), intake::stop, intake))
