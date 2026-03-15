@@ -11,8 +11,8 @@ public final class Constants {
 
   public static final double autoRotateMagnitudeRadians = 3.0 * 0.78;
   public static final double autoForwardSpeed = 3.9; // "m/s"
-  public static final double autoSpeedAdjust = 0.15;
-  public static final double autoForwardTime = 3.4; // total seconds
+  public static final double autoSpeedAdjust = 0.35;
+  public static final double autoForwardTime = 3.3; // total seconds
 
   // for feeding section of auto
   public static final double autoFeedingForwardSpeed = 2.0; // in meters per second
