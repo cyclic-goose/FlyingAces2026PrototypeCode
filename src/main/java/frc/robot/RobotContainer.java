@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+// import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.Intake;
@@ -218,6 +219,8 @@ public class RobotContainer {
     autoChooser.addOption("Turn Left Blue", intakeAutoTurnLeftBlue);
     // autoChooser.addOption("Align & Shoot", alignAndShootAuto);
 
+    // CommandScheduler.getInstance().
+
     SmartDashboard.putData("Auto Choices", autoChooser);
 
     configureButtonBindings();
@@ -279,6 +282,8 @@ public class RobotContainer {
             },
             intake));
 
+    // intake.setDefaultCommand(Commands.runEnd(() -> intake.runFeedMovePeriod(-0.85), () -> {},
+    // intake));
     // Default shooter command: right trigger runs launch, X runs transfer
     /*shooter.setDefaultCommand(
     Commands.run(

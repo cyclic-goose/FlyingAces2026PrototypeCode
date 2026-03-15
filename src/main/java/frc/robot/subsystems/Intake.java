@@ -40,6 +40,14 @@ public class Intake extends SubsystemBase {
     feedMoveMotor.set(ControlMode.PercentOutput, speed);
   }
 
+  public void runFeedMovePeriod(double speed) {
+    if (!(isFeedLimitBackPressed() && isFeedLimitFrontPressed())) {
+      feedMoveMotor.set(ControlMode.PercentOutput, 0.85);
+    } else {
+      feedMoveMotor.set(ControlMode.PercentOutput, 0.0);
+    }
+  }
+
   public void runFeed(double speed) {
     // run both feed motors
     feedMotor1.set(ControlMode.PercentOutput, speed);
