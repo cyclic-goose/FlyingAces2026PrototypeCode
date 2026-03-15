@@ -70,11 +70,11 @@ public class RobotContainer {
                 Commands.parallel(
                         // move while scooping
                         Commands.runEnd(
-                            () -> drive.runVelocity(new ChassisSpeeds(1.5, 0, 0.0)),
+                            () -> drive.runVelocity(new ChassisSpeeds(Constants.autoFeedingForwardSpeed, 0, 0.0)),
                             () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                             drive),
                         Commands.runEnd(() -> intake.runFeed(0.7), intake::stop, intake))
-                    .withTimeout(4.0))
+                    .withTimeout(Constants.autoFeedingForwardTime))
             .withTimeout(20); // timeout for entire auto
 
     // opposite direction auto
@@ -103,11 +103,11 @@ public class RobotContainer {
                 Commands.parallel(
                         // move while scooping
                         Commands.runEnd(
-                            () -> drive.runVelocity(new ChassisSpeeds(1.5, 0, 0.0)),
+                            () -> drive.runVelocity(new ChassisSpeeds(Constants.autoFeedingForwardSpeed, 0, 0.0)),
                             () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                             drive),
                         Commands.runEnd(() -> intake.runFeed(0.85), intake::stop, intake))
-                    .withTimeout(4.0))
+                    .withTimeout(Constants.autoFeedingForwardTime))
             .withTimeout(20); // timeout for entire auto
 
     Command intakeAutoTurnRightBlue =
@@ -142,11 +142,11 @@ public class RobotContainer {
                 Commands.parallel(
                         // move while scooping
                         Commands.runEnd(
-                            () -> drive.runVelocity(new ChassisSpeeds(1.5, 0, 0.0)),
+                            () -> drive.runVelocity(new ChassisSpeeds(Constants.autoFeedingForwardSpeed, 0, 0.0)),
                             () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                             drive),
                         Commands.runEnd(() -> intake.runFeed(0.85), intake::stop, intake))
-                    .withTimeout(4.0))
+                    .withTimeout(Constants.autoFeedingForwardTime))
             .withTimeout(25); // timeout for entire auto
 
     Command intakeAutoTurnLeftBlue =
@@ -181,11 +181,11 @@ public class RobotContainer {
                 Commands.parallel(
                         // move while scooping
                         Commands.runEnd(
-                            () -> drive.runVelocity(new ChassisSpeeds(1.5, 0, 0.0)),
+                            () -> drive.runVelocity(new ChassisSpeeds(Constants.autoFeedingForwardSpeed, 0, 0.0)),
                             () -> drive.runVelocity(new ChassisSpeeds(0.0, 0.0, 0.0)),
                             drive),
                         Commands.runEnd(() -> intake.runFeed(0.85), intake::stop, intake))
-                    .withTimeout(4.0))
+                    .withTimeout(Constants.autoFeedingForwardTime))
             .withTimeout(25); // timeout for entire auto
 
     // Auto: back up 1m, align to goal via limelight, rev then fire
@@ -247,9 +247,7 @@ public class RobotContainer {
                 () -> Rotation2d.kZero));
 
     // B button toggles intake lock
-    controller
-        .b()
-        .onTrue(Commands.runOnce(() -> Constants.lockIntake = !Constants.lockIntake));
+    controller.b().onTrue(Commands.runOnce(() -> Constants.lockIntake = !Constants.lockIntake));
 
     // default intake command: handles feed move (bumpers) and feed motors (triggers) together
     intake.setDefaultCommand(
