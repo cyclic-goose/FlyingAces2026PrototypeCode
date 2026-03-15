@@ -257,6 +257,8 @@ public class RobotContainer {
     // B button toggles intake lock
     controller.b().onTrue(Commands.runOnce(() -> Constants.lockIntake = !Constants.lockIntake));
 
+    controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+
     // default intake command: handles feed move (bumpers) and feed motors (triggers) together
     intake.setDefaultCommand(
         Commands.run(
